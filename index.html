@@ -15,7 +15,22 @@
 .city-guide-search label{flex:1 1 210px}
 .city-guide-search input{width:100%}
 @media(max-width:680px){.city-guide-grid{grid-template-columns:1fr}}
-</style></head><body><header class="top"><div class="brand">🌍✈️ CARDEM <span>EL CAMP</span></div><nav class="nav"><a href="#top" data-i="navhome">🏠 Inici</a><a href="#discover" data-i="navtravel">✈️ Viatges</a><a href="#discover" data-i="navdeals">🔥 Ofertes</a><a href="#discover" data-i="navsurprise">🎁 Sorpresa</a><a href="#discover" data-i="navsnow">❄️ Neu</a></nav><select id="lang" aria-label="Idioma"><option value="ca">🟨🟥 Català</option><option value="es">🇪🇸 Castellano</option><option value="en">🇬🇧 English</option></select></header><main><section class="hero" id="top"><div class="hero-inner"><div class="eyebrow" id="eyebrow">🌴 PLATJA · NEU · AVENTURA</div><h1>CARDEM<br><span>EL CAMP!</span></h1><p id="tag">🧳 Fes la maleta, que marxem!</p><div class="search"><h2 id="searchtitle">On marxem aquesta vegada?</h2><div class="fields"><div class="field"><label id="originlabel" for="origin">SORTIDA · QUALSEVOL PUNT D'EUROPA</label><input id="origin" placeholder="Barcelona, París, Roma..."></div><div class="field"><label id="destlabel" for="destination">ON VOLS ANAR?</label><input id="destination" placeholder="Destinació" required></div><div class="field"><label id="datelabel" for="date">DATA</label><input id="date" type="date"></div><div class="field"><label id="nightslabel" for="nights">NITS</label><select id="nights"><option>1</option><option selected>2</option><option>3</option><option>4</option><option>7</option></select></div><div class="field"><label id="peoplelabel" for="people">PERSONES</label><input id="people" type="number" min="1" max="20" value="2"></div></div><div class="search-bottom"><small id="note">⭐ Hotels i apartaments: qualitat objectiu 9/10 o superior.<br>💰 Compara sempre el preu total abans de reservar.</small><button class="go" id="go">🔎 TROBA EL MILLOR PREU</button></div><div class="results" id="results" aria-live="polite"></div></div></div></section><section class="section" id="discover"><h2 id="discover">Quina aventura et ve de gust?</h2><p class="sub" id="discoverSub">Explora possibilitats i consulta ofertes als proveïdors.</p><div class="cards"><button class="card" data-action="planner" data-search="Barcelona" ><img loading="lazy" alt="Viatja a la teva manera" src="https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=950&q=85"><span class="shade"></span><span class="card-content"><span class="chip">🌍 VIATGES A LA CARTA</span><strong>Viatja a la teva manera</strong><em>Escull destinació, dates i transport →</em></span></button><button class="card" data-search="Mallorca" ><img loading="lazy" alt="Escapades de cap de setmana" src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=950&q=85"><span class="shade"></span><span class="card-content"><span class="chip">🧳 CAPS DE SETMANA</span><strong>Escapades de cap de setmana</strong><em>Dos, tres o quatre dies per desconnectar →</em></span></button><button class="card" data-search="Roma" ><img loading="lazy" alt="Ofertes de viatges" src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&w=950&q=85"><span class="shade"></span><span class="card-content"><span class="chip">🔥 OFERTES</span><strong>Ofertes de viatges</strong><em>Compara preus i busca oportunitats →</em></span></button><button class="card" data-search="Andorra" ><img loading="lazy" alt="Forfets, esquís i snowboard" src="https://images.unsplash.com/photo-1517299321609-52687d1bc55a?auto=format&fit=crop&w=950&q=85"><span class="shade"></span><span class="card-content"><span class="chip">⛷️ NEU I AVENTURA</span><strong>Forfets, esquís i snowboard</strong><em>Material, cascs, classes i allotjament →</em></span></button><button class="card" data-search="Destinació sorpresa" data-surprise="true"><img loading="lazy" alt="Viatge sorpresa" src="https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=950&q=85"><span class="shade"></span><span class="card-content"><span class="chip">🎁 DESTINACIÓ SECRETA</span><strong>Viatge sorpresa</strong><em>Descobreix on vas just abans de sortir →</em></span></button><button class="card" data-search="París" ><img loading="lazy" alt="Escapades de pont" src="https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=950&q=85"><span class="shade"></span><span class="card-content"><span class="chip">🌉 PONTS I FESTIUS</span><strong>Escapades de pont</strong><em>Aprofita cada dia lliure per viatjar →</em></span></button></div><p class="sub" style="margin-top:22px;font-size:13px">Les ofertes i els viatges sorpresa són opcions per explorar: encara no es poden comprar directament en aquesta web.</p></section><section class="promise"><h2>Viatja més. Paga menys. Viu més.</h2><p>Busquem opcions de viatge assequibles sense renunciar a la qualitat. Versió de prova: els preus, les valoracions i la disponibilitat s'han de comprovar als webs dels proveïdors.</p></section><div id="planner" class="planner" role="dialog" aria-modal="true" aria-labelledby="plannerTitle"><div class="plannerbox"><h2 id="plannerTitle">🌍 Viatges a la carta</h2><p id="plannerIntro">Explica'ns quant vols gastar i et preparem una proposta.</p><form id="plannerForm"><div class="plannergrid"><label id="plOrigin">Sortida<input id="plFrom" placeholder="Barcelona" value="Barcelona" required></label><label id="plBudget">Pressupost total del grup (€), opcional<input id="plMoney" type="number" min="0" max="1200000" step="any" placeholder="Ex. 1000"></label><label>Data de sortida (opcional)<input id="plDepart" type="date"></label><label>Flexibilitat de dates<select id="plFlex"><option value="flex">Flexible: buscar el millor preu</option><option value="fixed">Dates fixes</option></select></label><label id="plDays">Dies (opcional: calcula els dies possibles)<input id="plDuration" type="number" min="1" max="45" value="" placeholder="En blanc = calcula dies"></label><label id="plPeople">Persones<input id="plTravelers" type="number" min="1" max="12" value="1" required></label><label id="plDestination">Destinació (opcional)<input id="plWhere" placeholder="Deixa-ho buit per rebre idees"></label><label id="plTransport">Transport preferit<select id="plMode"><option value="auto">El més econòmic</option><option value="flight">Avió</option><option value="train">Tren o autobús</option><option value="car">Cotxe particular</option></select></label><label id="plRental">Vols llogar cotxe?<select id="plCar"><option value="maybe">Només si cal</option><option value="yes">Sí</option><option value="no">No</option></select></label><label id="plQuality">Categoria d’hotel<select id="plHotelQuality"><option value="standard">Econòmic · mínim 7,5/10</option><option value="comfort" selected>Confort · 8/10+</option><option value="premium">Superior · 8,5/10+</option></select></label><label>Ritme del viatge<select id="plPace"><option value="balanced">Equilibrat: 2–3 nits per lloc</option><option value="active">Intens: molts llocs</option><option value="relaxed">Tranquil: menys trasllats</option></select></label><label>Interès principal<select id="plInterest"><option value="mix">Cultura, natura i gastronomia</option><option value="culture">Cultura i pobles</option><option value="nature">Natura i aventura</option><option value="food">Gastronomia local</option><option value="beach">Platges i illes</option></select></label><label id="plStyle">Tipus de viatge<select id="plStyleValue"><option value="mix">Una mica de tot</option><option value="beach">Platja</option><option value="city">Ciutat</option><option value="nature">Natura</option><option value="snow">Neu</option></select></label></div><div class="planneractions"><button type="button" class="closeplan" id="closePlanner">Tancar</button><button class="go" type="submit" id="planSubmit">✨ Prepara el meu viatge</button></div></form><form id="cityGuideForm" class="city-guide-search"><label for="guideCity">Guia de ciutat<input id="guideCity" name="city" maxlength="120" required placeholder="Ex. Tòquio, Japó"></label><button type="submit">Obre la guia</button></form><div id="cityGuideOutput" aria-live="polite"></div><p class="planhint">Amb la destinació en blanc, el cercador proposa escapades fora d’Espanya.</p><div id="planOutput" aria-live="polite"></div>
+</style><style>
+.language-flags{display:flex;flex:none;gap:6px}
+.language-flags button{display:grid;place-items:center;width:44px;height:44px;padding:4px;border:1px solid #ffffff66;border-radius:9px;background:#1e3552}
+.language-flags button[aria-pressed="true"]{border-color:#ffdb45;box-shadow:inset 0 0 0 1px #ffdb45}
+.language-flags button:focus-visible{outline:2px solid white;outline-offset:2px}
+.flag{display:block;width:30px;height:20px;border-radius:2px}
+.flag-ca{background:repeating-linear-gradient(#ffdb35 0 11.11%,#c81424 11.11% 22.22%)}
+.flag-es{position:relative;background:linear-gradient(#aa151b 25%,#f1bf00 25% 75%,#aa151b 75%)}
+.flag-es::after{content:"";position:absolute;top:7px;left:7px;width:5px;height:6px;border-radius:0 0 2px 2px;background:#aa151b}
+.flag-en{background:linear-gradient(90deg,transparent 43%,#ce1126 43% 57%,transparent 57%),linear-gradient(white 39%,#ce1126 39% 61%,white 61%)}
+@media(max-width:360px){.language-flags{gap:3px}.top{gap:6px}.brand{font-size:18px}}
+</style></head><body><header class="top"><div class="brand">🌍✈️ CARDEM <span>EL CAMP</span></div><nav class="nav"><a href="#top" data-i="navhome">🏠 Inici</a><a href="#discover" data-i="navtravel">✈️ Viatges</a><a href="#discover" data-i="navdeals">🔥 Ofertes</a><a href="#discover" data-i="navsurprise">🎁 Sorpresa</a><a href="#discover" data-i="navsnow">❄️ Neu</a></nav><select id="lang" hidden aria-label="Idioma"><option value="ca">🟨🟥 Català</option><option value="es">🇪🇸 Castellano</option><option value="en">🇬🇧 English</option></select><div class="language-flags" role="group" aria-label="Idioma / Language">
+<button type="button" data-language="ca" aria-label="Català" title="Català" aria-pressed="true"><span class="flag flag-ca" aria-hidden="true"></span></button>
+<button type="button" data-language="es" aria-label="Castellano" title="Castellano" aria-pressed="false"><span class="flag flag-es" aria-hidden="true"></span></button>
+<button type="button" data-language="en" aria-label="English" title="English" aria-pressed="false"><span class="flag flag-en" aria-hidden="true"></span></button>
+</div></header><main><section class="hero" id="top"><div class="hero-inner"><div class="eyebrow" id="eyebrow">🌴 PLATJA · NEU · AVENTURA</div><h1>CARDEM<br><span>EL CAMP!</span></h1><p id="tag">🧳 Fes la maleta, que marxem!</p><div class="search"><h2 id="searchtitle">On marxem aquesta vegada?</h2><div class="fields"><div class="field"><label id="originlabel" for="origin">SORTIDA · QUALSEVOL PUNT D'EUROPA</label><input id="origin" placeholder="Barcelona, París, Roma..."></div><div class="field"><label id="destlabel" for="destination">ON VOLS ANAR?</label><input id="destination" placeholder="Destinació" required></div><div class="field"><label id="datelabel" for="date">DATA</label><input id="date" type="date"></div><div class="field"><label id="nightslabel" for="nights">NITS</label><select id="nights"><option>1</option><option selected>2</option><option>3</option><option>4</option><option>7</option></select></div><div class="field"><label id="peoplelabel" for="people">PERSONES</label><input id="people" type="number" min="1" max="20" value="2"></div></div><div class="search-bottom"><small id="note">⭐ Hotels i apartaments: qualitat objectiu 9/10 o superior.<br>💰 Compara sempre el preu total abans de reservar.</small><button class="go" id="go">🔎 TROBA EL MILLOR PREU</button></div><div class="results" id="results" aria-live="polite"></div></div></div></section><section class="section" id="discover"><h2 id="discover">Quina aventura et ve de gust?</h2><p class="sub" id="discoverSub">Explora possibilitats i consulta ofertes als proveïdors.</p><div class="cards"><button class="card" data-action="planner" data-search="Barcelona" ><img loading="lazy" alt="Viatja a la teva manera" src="https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=950&q=85"><span class="shade"></span><span class="card-content"><span class="chip">🌍 VIATGES A LA CARTA</span><strong>Viatja a la teva manera</strong><em>Escull destinació, dates i transport →</em></span></button><button class="card" data-search="Mallorca" ><img loading="lazy" alt="Escapades de cap de setmana" src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=950&q=85"><span class="shade"></span><span class="card-content"><span class="chip">🧳 CAPS DE SETMANA</span><strong>Escapades de cap de setmana</strong><em>Dos, tres o quatre dies per desconnectar →</em></span></button><button class="card" data-search="Roma" ><img loading="lazy" alt="Ofertes de viatges" src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&w=950&q=85"><span class="shade"></span><span class="card-content"><span class="chip">🔥 OFERTES</span><strong>Ofertes de viatges</strong><em>Compara preus i busca oportunitats →</em></span></button><button class="card" data-search="Andorra" ><img loading="lazy" alt="Forfets, esquís i snowboard" src="https://images.unsplash.com/photo-1517299321609-52687d1bc55a?auto=format&fit=crop&w=950&q=85"><span class="shade"></span><span class="card-content"><span class="chip">⛷️ NEU I AVENTURA</span><strong>Forfets, esquís i snowboard</strong><em>Material, cascs, classes i allotjament →</em></span></button><button class="card" data-search="Destinació sorpresa" data-surprise="true"><img loading="lazy" alt="Viatge sorpresa" src="https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=950&q=85"><span class="shade"></span><span class="card-content"><span class="chip">🎁 DESTINACIÓ SECRETA</span><strong>Viatge sorpresa</strong><em>Descobreix on vas just abans de sortir →</em></span></button><button class="card" data-search="París" ><img loading="lazy" alt="Escapades de pont" src="https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=950&q=85"><span class="shade"></span><span class="card-content"><span class="chip">🌉 PONTS I FESTIUS</span><strong>Escapades de pont</strong><em>Aprofita cada dia lliure per viatjar →</em></span></button></div><p class="sub" style="margin-top:22px;font-size:13px">Les ofertes i els viatges sorpresa són opcions per explorar: encara no es poden comprar directament en aquesta web.</p></section><section class="promise"><h2>Viatja més. Paga menys. Viu més.</h2><p>Busquem opcions de viatge assequibles sense renunciar a la qualitat. Versió de prova: els preus, les valoracions i la disponibilitat s'han de comprovar als webs dels proveïdors.</p></section><div id="planner" class="planner" role="dialog" aria-modal="true" aria-labelledby="plannerTitle"><div class="plannerbox"><h2 id="plannerTitle">🌍 Viatges a la carta</h2><p id="plannerIntro">Explica'ns quant vols gastar i et preparem una proposta.</p><form id="plannerForm"><div class="plannergrid"><label id="plOrigin">Sortida<input id="plFrom" placeholder="Barcelona" value="Barcelona" required></label><label id="plBudget">Pressupost total del grup (€), opcional<input id="plMoney" type="number" min="0" max="1200000" step="any" placeholder="Ex. 1000"></label><label>Data de sortida (opcional)<input id="plDepart" type="date"></label><label>Flexibilitat de dates<select id="plFlex"><option value="flex">Flexible: buscar el millor preu</option><option value="fixed">Dates fixes</option></select></label><label id="plDays">Dies (opcional: calcula els dies possibles)<input id="plDuration" type="number" min="1" max="45" value="" placeholder="En blanc = calcula dies"></label><label id="plPeople">Persones<input id="plTravelers" type="number" min="1" max="12" value="1" required></label><label id="plDestination">Destinació (opcional)<input id="plWhere" placeholder="Deixa-ho buit per rebre idees"></label><label id="plTransport">Transport preferit<select id="plMode"><option value="auto">El més econòmic</option><option value="flight">Avió</option><option value="train">Tren o autobús</option><option value="car">Cotxe particular</option></select></label><label id="plRental">Vols llogar cotxe?<select id="plCar"><option value="maybe">Només si cal</option><option value="yes">Sí</option><option value="no">No</option></select></label><label id="plQuality">Categoria d’hotel<select id="plHotelQuality"><option value="standard">Econòmic · mínim 7,5/10</option><option value="comfort" selected>Confort · 8/10+</option><option value="premium">Superior · 8,5/10+</option></select></label><label>Ritme del viatge<select id="plPace"><option value="balanced">Equilibrat: 2–3 nits per lloc</option><option value="active">Intens: molts llocs</option><option value="relaxed">Tranquil: menys trasllats</option></select></label><label>Interès principal<select id="plInterest"><option value="mix">Cultura, natura i gastronomia</option><option value="culture">Cultura i pobles</option><option value="nature">Natura i aventura</option><option value="food">Gastronomia local</option><option value="beach">Platges i illes</option></select></label><label id="plStyle">Tipus de viatge<select id="plStyleValue"><option value="mix">Una mica de tot</option><option value="beach">Platja</option><option value="city">Ciutat</option><option value="nature">Natura</option><option value="snow">Neu</option></select></label></div><div class="planneractions"><button type="button" class="closeplan" id="closePlanner">Tancar</button><button class="go" type="submit" id="planSubmit">✨ Prepara el meu viatge</button></div></form><form id="cityGuideForm" class="city-guide-search"><label for="guideCity">Guia de ciutat<input id="guideCity" name="city" maxlength="120" required placeholder="Ex. Tòquio, Japó"></label><button type="submit">Obre la guia</button></form><div id="cityGuideOutput" aria-live="polite"></div><p class="planhint">Amb la destinació en blanc, el cercador proposa escapades fora d’Espanya.</p><div id="planOutput" aria-live="polite"></div>
 <details class="proposal">
   <summary>Consulta tarifes de vols</summary>
   <form id="flightSearch">
@@ -239,13 +254,13 @@ document.getElementById('flightSearch').addEventListener('submit', async event =
         if (!response.ok) throw Error(data.error || 'No s’han pogut consultar els vols.');
         const source = document.createElement('p');
         source.textContent = data.offers.length
-          ? data.provider + ' · ' + new Date(data.searchedAt).toLocaleString('ca') + ' · Tarifes subjectes a disponibilitat.'
+          ? data.provider + ' · ' + new Date(data.searchedAt).toLocaleString(lang.value) + ' · Tarifes subjectes a disponibilitat.'
           : 'El proveïdor no ha retornat cap oferta vigent amb aquests filtres.';
         section.append(source);
         const list = document.createElement('ul');
         for (const offer of data.offers) {
           const item = document.createElement('li');
-          const amount = new Intl.NumberFormat('ca', { style: 'currency', currency: offer.currency }).format(offer.amount);
+          const amount = new Intl.NumberFormat(lang.value, { style: 'currency', currency: offer.currency }).format(offer.amount);
           const route = offer.legs.map(leg => leg.map(segment =>
             [segment.date, segment.from, segment.to].filter(Boolean).join(' ')
           ).join(' / ')).join(' · ');
@@ -312,8 +327,8 @@ async function requestAITrip(){
 const host=location.hostname.endsWith('github.io')?'':location.origin;
 if(!host)return false;
 const get=id=>document.getElementById(id);
-const payload={departure:get('plFrom').value.trim(),destination:get('plWhere').value.trim(),budget:get('plMoney').value ? Number(get('plMoney').value) : null,travelers:Number(get('plTravelers').value),days:get('plDuration').value?Number(get('plDuration').value):null,date:get('plDepart').value,flex:get('plFlex').value,pace:get('plPace').value,interest:get('plInterest').value,quality:get('plHotelQuality').value,transport:get('plMode').value,rental:get('plCar').value,style:get('plStyleValue').value};
-const searchKey = JSON.stringify({ ...payload, budget: null });
+const payload={language:lang.value,departure:get('plFrom').value.trim(),destination:get('plWhere').value.trim(),budget:get('plMoney').value ? Number(get('plMoney').value) : null,travelers:Number(get('plTravelers').value),days:get('plDuration').value?Number(get('plDuration').value):null,date:get('plDepart').value,flex:get('plFlex').value,pace:get('plPace').value,interest:get('plInterest').value,quality:get('plHotelQuality').value,transport:get('plMode').value,rental:get('plCar').value,style:get('plStyleValue').value};
+const searchKey = JSON.stringify({ ...payload, budget: null, language: null });
 if (!payload.destination && previousTripSearch?.key === searchKey && previousTripSearch.budget !== payload.budget) {
   payload.previousDestinations = previousTripSearch.places;
 }
@@ -322,6 +337,7 @@ try{
 const response=await fetch('/api/plan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
 
 const data=await response.json();
+if(payload.language !== lang.value)return true;
 if(!response.ok && payload.budget !== null && !payload.destination)return false;
 if(!response.ok){output.innerHTML='<p class="planhint">⚠️ '+safeText(data.error||'No es pot consultar la IA.')+'</p>';return true}
 const plan=data.plan||{};
@@ -336,7 +352,7 @@ const expenseLabels = {
   meals: 'Menjar no inclòs', local: 'Mobilitat local', activities: 'Activitats i excursions',
   fees: 'Taxes i propines', reserve: 'Reserva per a imprevistos'
 };
-const euros = new Intl.NumberFormat('ca-ES', {style:'currency', currency:'EUR', maximumFractionDigits:2});
+const euros = new Intl.NumberFormat(lang.value, {style:'currency', currency:'EUR', maximumFractionDigits:2});
 const options = plan.options || [];
 const placesFor = items => items.map(option => option.stages?.[0]?.place).filter(Boolean);
 const supplemental = payload.budget !== null && !payload.destination &&
@@ -411,4 +427,252 @@ else {const count=days||circuitMaxDays(p,amount,people,from,mode,rent);html=coun
 planOutput.innerHTML='<p class="planhint"><b>Preferències:</b> '+safeText(departure||'dates obertes')+' · '+safeText(flex)+' · '+safeText(pace)+' · '+safeText(interest)+'. Encara no es consulten disponibilitats reals per dates.</p><p class="planhint"><b>PROTOTIP DE PLANIFICACIÓ (VERSIÓ 15), no cercador de preus reals.</b> Les tarifes són hipòtesis orientatives, no verificades, i poden variar molt segons dates, temporada, equipatge, origen, nombre de persones i disponibilitat. Les activitats són suggeriments, no excursions reservades. Els hotels 7,5/10 o més s’han de verificar als proveïdors. Els itineraris entre ciutats són propostes, no rutes ni preus confirmats.</p>'+html;
 planOutput.scrollIntoView({behavior:'smooth',block:'start'});
 });
+
+const interfaceCopy = {
+  "⭐ Hotels i apartaments: qualitat objectiu 9/10 o superior.": ["⭐ Hoteles y apartamentos: valoración objetivo de 9/10 o superior.", "⭐ Hotels and apartments: target rating of 9/10 or higher."],
+  "💰 Compara sempre el preu total abans de reservar.": ["💰 Compara siempre el precio total antes de reservar.", "💰 Always compare the total price before booking."],
+  "🌍 VIATGES A LA CARTA": ["🌍 VIAJES A LA CARTA", "🌍 TAILOR-MADE TRIPS"],
+  "🧳 CAPS DE SETMANA": ["🧳 FINES DE SEMANA", "🧳 WEEKEND GETAWAYS"],
+  "🔥 OFERTES": ["🔥 OFERTAS", "🔥 DEALS"],
+  "⛷️ NEU I AVENTURA": ["⛷️ NIEVE Y AVENTURA", "⛷️ SNOW AND ADVENTURE"],
+  "🎁 DESTINACIÓ SECRETA": ["🎁 DESTINO SECRETO", "🎁 MYSTERY DESTINATION"],
+  "🌉 PONTS I FESTIUS": ["🌉 PUENTES Y FESTIVOS", "🌉 HOLIDAYS AND LONG WEEKENDS"],
+  "Les ofertes i els viatges sorpresa són opcions per explorar: encara no es poden comprar directament en aquesta web.": ["Las ofertas y los viajes sorpresa se pueden explorar desde esta web. La compra directa aún no está disponible.", "Explore deals and mystery trips here. Direct booking is coming later."],
+  "Viatja més. Paga menys. Viu més.": ["Viaja más. Paga menos. Vive más.", "Travel more. Spend less. Live more."],
+  "Busquem opcions de viatge assequibles sense renunciar a la qualitat. Versió de prova: els preus, les valoracions i la disponibilitat s'han de comprovar als webs dels proveïdors.": ["Buscamos opciones de viaje asequibles sin renunciar a la calidad. Versión de prueba: comprueba los precios, las valoraciones y la disponibilidad en las webs de los proveedores.", "We look for affordable trips with quality in mind. This is a trial version. Check prices, ratings and availability on providers’ websites."],
+  "Data de sortida (opcional)": ["Fecha de salida (opcional)", "Departure date (optional)"],
+  "Flexibilitat de dates": ["Flexibilidad de fechas", "Date flexibility"],
+  "Flexible: buscar el millor preu": ["Flexible: buscar el mejor precio", "Flexible: look for the best price"],
+  "Dates fixes": ["Fechas fijas", "Fixed dates"],
+  "El més econòmic": ["El más económico", "Cheapest available"],
+  "Avió": ["Avión", "Plane"],
+  "Tren o autobús": ["Tren o autobús", "Train or bus"],
+  "Cotxe particular": ["Coche propio", "Own car"],
+  "Només si cal": ["Solo si hace falta", "Only if needed"],
+  "Sí": ["Sí", "Yes"],
+  "Categoria d’hotel": ["Categoría del hotel", "Hotel category"],
+  "Econòmic · mínim 7,5/10": ["Económico · mínimo 7,5/10", "Budget · at least 7.5/10"],
+  "Confort · 8/10+": ["Confort · 8/10+", "Comfort · 8/10+"],
+  "Superior · 8,5/10+": ["Superior · 8,5/10+", "Upscale · 8.5/10+"],
+  "Ritme del viatge": ["Ritmo del viaje", "Travel pace"],
+  "Equilibrat: 2–3 nits per lloc": ["Equilibrado: 2–3 noches por lugar", "Balanced: 2–3 nights per stop"],
+  "Intens: molts llocs": ["Intenso: muchos lugares", "Fast-paced: more stops"],
+  "Tranquil: menys trasllats": ["Tranquilo: menos traslados", "Relaxed: fewer transfers"],
+  "Interès principal": ["Interés principal", "Main interest"],
+  "Cultura, natura i gastronomia": ["Cultura, naturaleza y gastronomía", "Culture, nature and food"],
+  "Cultura i pobles": ["Cultura y pueblos", "Culture and villages"],
+  "Natura i aventura": ["Naturaleza y aventura", "Nature and adventure"],
+  "Gastronomia local": ["Gastronomía local", "Local food"],
+  "Platges i illes": ["Playas e islas", "Beaches and islands"],
+  "Una mica de tot": ["Un poco de todo", "A bit of everything"],
+  "Platja": ["Playa", "Beach"],
+  "Ciutat": ["Ciudad", "City"],
+  "Natura": ["Naturaleza", "Nature"],
+  "Neu": ["Nieve", "Snow"],
+  "Guia de ciutat": ["Guía de ciudad", "City guide"],
+  "Obre la guia": ["Abre la guía", "Open guide"],
+  "Amb la destinació en blanc, el cercador proposa escapades fora d’Espanya.": ["Con el destino en blanco, el buscador propone escapadas fuera de España.", "Leave the destination blank for getaways outside Spain."],
+  "Consulta tarifes de vols": ["Consulta tarifas aéreas", "Check flight fares"],
+  "Introdueix els codis d’aeroport de la ruta, per exemple BCN i NRT. Deixa la tornada en blanc per buscar només l’anada.": ["Introduce los códigos de los aeropuertos, por ejemplo BCN y NRT. Deja la vuelta en blanco para buscar solo la ida.", "Enter your airport codes, such as BCN and NRT. Leave the return date blank for a one-way search."],
+  "Aeroport de sortida": ["Aeropuerto de salida", "Departure airport"],
+  "Aeroport de destinació": ["Aeropuerto de destino", "Destination airport"],
+  "Anada": ["Ida", "Outbound"],
+  "Tornada": ["Vuelta", "Return"],
+  "Adults": ["Adultos", "Adults"],
+  "Una maleta facturada per adult a tots els trams": ["Una maleta facturada por adulto en todos los tramos", "One checked bag per adult on every leg"],
+  "Consulta l’anada i la tornada per separat": ["Consulta la ida y la vuelta por separado", "Search outbound and return separately"],
+  "Consulta els vols": ["Consulta los vuelos", "Search flights"],
+  "Simulació amb costos orientatius per a hotels econòmics, hostals i apartaments; NO preus reals. No podem assegurar hotels 7,5/10+ ni disponibilitat fins a consultar els proveïdors.": ["Estimaciones para hoteles económicos, hostales y apartamentos. Consulta con los proveedores las tarifas, las valoraciones y la disponibilidad.", "Estimates for budget hotels, hostels and apartments. Check providers for prices, ratings and availability."],
+  "🎁 Viatge sorpresa": ["🎁 Viaje sorpresa", "🎁 Mystery trip"],
+  "Viatge sorpresa": ["Viaje sorpresa", "Mystery trip"],
+  "Tria el pressupost, les dates i el tipus de viatge. La destinació es revelarà poc abans de la sortida.": ["Elige el presupuesto, las fechas y el tipo de viaje. Descubrirás el destino poco antes de salir.", "Choose a budget, dates and trip type. Your destination will be revealed shortly before departure."],
+  "Pressupost màxim per persona (€)": ["Presupuesto máximo por persona (€)", "Maximum budget per person (€)"],
+  "Pròximament: servei de reserves. Aquesta pantalla és una demostració i no cobra ni confirma viatges.": ["Las reservas estarán disponibles más adelante. Esta demostración no cobra ni confirma viajes.", "Booking is coming later. This demo does not charge or confirm trips."],
+  "Tancar": ["Cerrar", "Close"],
+  "© Cardem el Camp · Fes la maleta, que marxem! · Versió de prova": ["© Cardem el Camp · ¡Haz la maleta, que nos vamos! · Versión de prueba", "© Cardem el Camp · Pack your bags, let’s go! · Trial version"],
+  "Deixa-ho buit per rebre idees": ["Déjalo en blanco para recibir ideas", "Leave blank for ideas"],
+  "Ex. Tòquio, Japó": ["Ej. Tokio, Japón", "E.g. Tokyo, Japan"],
+  "Ex. 1000": ["Ej. 1000", "E.g. 1000"],
+  "A peu": ["A pie", "Walking"],
+  "Esports d’aventura": ["Deportes de aventura", "Adventure sports"],
+  "Gastronomia": ["Gastronomía", "Food and drink"],
+  "Diversió": ["Diversión", "Entertainment"],
+  "Cultura i diversió": ["Cultura y diversión", "Culture and entertainment"],
+  "On menjar": ["Dónde comer", "Where to eat"],
+  "On comprar": ["Dónde comprar", "Where to shop"],
+  "Bancs i caixers": ["Bancos y cajeros", "Banks and ATMs"],
+  "Menjar de carrer i mercats": ["Comida callejera y mercados", "Street food and markets"],
+  "Restaurants econòmics": ["Restaurantes económicos", "Budget restaurants"],
+  "Restaurants ben valorats": ["Restaurantes bien valorados", "Highly rated restaurants"],
+  "Alta cuina": ["Alta cocina", "Fine dining"],
+  "Supermercats de descompte": ["Supermercados de descuento", "Discount supermarkets"],
+  "Supermercats per comparar": ["Supermercados para comparar", "Supermarkets to compare"],
+  "Caixers per a targetes internacionals": ["Cajeros para tarjetas internacionales", "ATMs for international cards"],
+  "Localitzador oficial Visa": ["Localizador oficial de Visa", "Official Visa locator"],
+  "Localitzador oficial Mastercard": ["Localizador oficial de Mastercard", "Official Mastercard locator"],
+  "Compara preus a la botiga. Confirma la xarxa de la teva targeta i les comissions al caixer.": ["Compara precios en la tienda. Confirma la red de tu tarjeta y las comisiones en el cajero.", "Compare prices in store. Check your card network and the ATM fees."],
+  "Guia de": ["Guía de", "Guide to"],
+  "França": ["Francia", "France"],
+  "Marroc": ["Marruecos", "Morocco"],
+  "Itàlia": ["Italia", "Italy"],
+  "Bèlgica": ["Bélgica", "Belgium"],
+  "Anglaterra": ["Inglaterra", "England"],
+  "Allotjament": ["Alojamiento", "Accommodation"],
+  "Activitats": ["Actividades", "Activities"],
+  "Transport": ["Transporte", "Transport"],
+  "Menjar": ["Comida", "Food"],
+  "dies": ["días", "days"],
+  "nits": ["noches", "nights"],
+  "Viatges a la carta": ["Viajes a la carta", "Tailor-made trips"],
+  "El cercador no ha trobat cap escapada fora d’Espanya amb aquestes condicions.": ["El buscador no ha encontrado ninguna escapada fuera de España con estas condiciones.", "No getaways outside Spain matched these conditions."],
+  "La IA està preparant la proposta…": ["La IA está preparando la propuesta…", "AI is preparing your trip…"],
+  "Itineraris orientatius, sense preus ni disponibilitat en temps real.": ["Itinerarios orientativos, sin precios ni disponibilidad en tiempo real.", "Trip ideas with estimated costs. Check live prices and availability with providers."],
+  "Consulta preus i disponibilitat": ["Consulta precios y disponibilidad", "Check prices and availability"],
+  "Contrasta preus i dates": ["Comprueba precios y fechas", "Check prices and dates"],
+  "Desglossament estimat": ["Desglose estimado", "Estimated cost breakdown"],
+  "Total estimat": ["Total estimado", "Estimated total"],
+  "Total orientatiu del grup": ["Total orientativo del grupo", "Estimated group total"],
+  "per al grup": ["para el grupo", "for the group"],
+  "per persona": ["por persona", "per person"],
+  "Marge disponible": ["Margen disponible", "Budget remaining"],
+  "Consulta el trasllat": ["Consulta el traslado", "Check transfer options"],
+  "Abans de reservar": ["Antes de reservar", "Before booking"],
+  "Comprova dates, allotjaments, transport i activitats als enllaços abans de pagar.": ["Comprueba las fechas, el alojamiento, el transporte y las actividades en los enlaces antes de pagar.", "Check dates, accommodation, transport and activities on the linked sites before paying."],
+  "Anada i tornada": ["Ida y vuelta", "Round trip"],
+  "Tarifa del creuer": ["Tarifa del crucero", "Cruise fare"],
+  "Menjar no inclòs": ["Comida no incluida", "Meals not included"],
+  "Mobilitat local": ["Transporte local", "Local transport"],
+  "Activitats i excursions": ["Actividades y excursiones", "Activities and excursions"],
+  "Taxes i propines": ["Tasas y propinas", "Taxes and tips"],
+  "Reserva per a imprevistos": ["Reserva para imprevistos", "Contingency"],
+  "Superior": ["Superior", "Upscale"],
+  "Estàndard": ["Estándar", "Standard"],
+  "Econòmica": ["Económica", "Budget"],
+  "Consultant el proveïdor de vols…": ["Consultando al proveedor de vuelos…", "Checking with the flight provider…"],
+  "La tornada ha de ser posterior o igual a l’anada.": ["La vuelta debe ser el mismo día que la ida o posterior.", "The return date must be on or after the departure date."],
+  "No s’han pogut consultar els vols.": ["No se han podido consultar los vuelos.", "Could not check flights."],
+  "Tarifes subjectes a disponibilitat.": ["Tarifas sujetas a disponibilidad.", "Fares subject to availability."],
+  "El proveïdor no ha retornat cap oferta vigent amb aquests filtres.": ["El proveedor no ha devuelto ofertas vigentes para estos filtros.", "The provider returned no current offers matching these filters."],
+  "Maleta facturada inclosa per adult": ["Maleta facturada incluida por adulto", "Checked bag included per adult"],
+  "Maleta facturada no confirmada": ["Maleta facturada sin confirmar", "Checked baggage unconfirmed"],
+  "La consulta de vols no està disponible en aquesta adreça.": ["La consulta de vuelos no está disponible en esta dirección.", "Flight search is unavailable at this address."],
+  "Són dos bitllets independents. El preu d’un bitllet conjunt pot ser diferent.": ["Son dos billetes independientes. El precio de un billete conjunto puede ser diferente.", "These are separate tickets. A combined ticket may cost a different amount."],
+  "La connexió de vols en directe està pendent d’activació.": ["La conexión de vuelos en directo está pendiente de activación.", "Live flight pricing is awaiting activation."],
+  "Revisa els codis d’aeroport, les dates i el nombre d’adults.": ["Revisa los códigos de aeropuerto, las fechas y el número de adultos.", "Check the airport codes, dates and number of adults."],
+  "Has arribat al límit de consultes de vols. Espera un minut.": ["Has alcanzado el límite de búsquedas de vuelos. Espera un minuto.", "You’ve reached the flight search limit. Wait a minute."],
+  "El proveïdor no accepta aquesta combinació d’aeroports o dates.": ["El proveedor no acepta esta combinación de aeropuertos o fechas.", "The provider does not accept these airports or dates."],
+  "Ara mateix no hem pogut consultar les tarifes de vols.": ["Ahora mismo no hemos podido consultar las tarifas de vuelos.", "We couldn’t check flight fares right now."],
+  "Indica una destinació per comparar preus sense pressupost.": ["Indica un destino para comparar precios sin presupuesto.", "Enter a destination to compare prices without a budget."],
+  "No hem pogut connectar amb el planificador. Torna-ho a provar.": ["No hemos podido conectar con el planificador. Inténtalo de nuevo.", "Could not connect to the planner. Try again."],
+  "Compara opcions i comprova que l’allotjament tingui 7,5/10 o més:": ["Compara opciones y comprueba que el alojamiento tenga 7,5/10 o más:", "Compare options and check that the accommodation is rated at least 7.5/10:"],
+  "Els enllaços obren proveïdors externs; no són preus verificats en temps real.": ["Los enlaces abren proveedores externos. Comprueba los precios allí.", "Links open external providers. Check current prices there."],
+  "✈️ Vols": ["✈️ Vuelos", "✈️ Flights"],
+  "🚗 Cotxe": ["🚗 Coche", "🚗 Car"],
+  "🚆 Tren": ["🚆 Tren", "🚆 Train"],
+  "Dues nits i una ruta a peu entre paisatges de la Costa Blava. Consulta els accessos i el transport fins a l’inici de la ruta.": ["Dos noches y una ruta a pie por la Costa Azul. Consulta los accesos y el transporte hasta el inicio de la ruta.", "Two nights and a walk on the French Riviera. Check access and transport to the trailhead."],
+  "Dues nits i una sessió de surf amb monitor i material a la costa, segons condicions. Comprova els vols i els trasllats.": ["Dos noches y una sesión de surf con monitor y material, según las condiciones. Comprueba los vuelos y los traslados.", "Two nights and a surf lesson with gear, subject to conditions. Check flights and transfers."],
+  "Dues nits amb visites al centre històric, pòrtics i museus. Comprova horaris i bitllets.": ["Dos noches con visitas al casco histórico, los pórticos y los museos. Comprueba los horarios y las entradas.", "Two nights exploring the historic centre, porticoes and museums. Check hours and tickets."],
+  "Dues nits, mercats i especialitats belgues, amb pressupost per a un tast o taller de xocolata.": ["Dos noches, mercados y especialidades belgas, con presupuesto para una cata o un taller de chocolate.", "Two nights, markets and Belgian specialities, with an allowance for a chocolate tasting or workshop."],
+  "Una nit i una escapada de lleure amb un espectacle o activitat amb entrada. Comprova horaris i imports de trasllat.": ["Una noche y una escapada de ocio con un espectáculo o actividad con entrada. Comprueba horarios y traslados.", "One night with a show or ticketed activity. Check schedules and transfer costs."],
+  "Una nit, patrimoni a Alfama i Belém, i lleure a l’Oceanari o un vespre de fado segons horaris. El transport inclou els trasllats locals.": ["Una noche, patrimonio en Alfama y Belém, y ocio en el Oceanario o una velada de fado según los horarios. El transporte incluye los traslados locales.", "One night, heritage in Alfama and Belém, and the Oceanarium or an evening of fado, depending on schedules. Transport includes local transfers."],
+  "Autobús i dues nits. Capitole, patrimoni del centre i una visita a un museu.": ["Autobús y dos noches. Capitole, patrimonio del centro y visita a un museo.", "Coach and two nights. Capitol Square, historic sights and a museum visit."],
+  "Anada i tornada. Patrimoni del centre històric, amb una visita si els horaris del transport ho permeten.": ["Ida y vuelta. Patrimonio del casco histórico, con una visita si los horarios del transporte lo permiten.", "Round trip. Explore the historic centre, with a visit if transport schedules allow."],
+  "Mercat exterior de Tsukiji · menjar de carrer": ["Mercado exterior de Tsukiji · comida callejera", "Tsukiji Outer Market · street food"],
+  "Selecció Bib Gourmand · bona relació qualitat-preu": ["Selección Bib Gourmand · buena relación calidad-precio", "Bib Gourmand selection · good value"],
+  "Narisawa · alta cuina": ["Narisawa · alta cocina", "Narisawa · fine dining"],
+  "OK Store Ginza · supermercat de descompte": ["OK Store Ginza · supermercado de descuento", "OK Store Ginza · discount supermarket"],
+  "Seven Bank · xarxes compatibles i condicions": ["Seven Bank · redes compatibles y condiciones", "Seven Bank · supported networks and terms"],
+  "Japan Post Bank · targetes emeses a l’estranger": ["Japan Post Bank · tarjetas emitidas en el extranjero", "Japan Post Bank · cards issued abroad"],
+  "escapades orientatives fora d’Espanya dins del pressupost total.": ["escapadas orientativas fuera de España dentro del presupuesto total.", "estimated getaways outside Spain within the total budget."],
+  "propostes orientatives": ["propuestas orientativas", "estimated trip ideas"],
+  "a partir de": ["a partir de", "from"],
+  "Consulta disponibilitat, horaris i tarifes als enllaços.": ["Consulta disponibilidad, horarios y tarifas en los enlaces.", "Check availability, schedules and fares using the links."],
+  "Has arribat al límit de consultes. Torna-ho a provar més tard.": ["Has alcanzado el límite de búsquedas. Inténtalo más tarde.", "You’ve reached the search limit. Try again later."],
+  "No hem pogut generar el viatge ara mateix. Torna-ho a provar.": ["No hemos podido generar el viaje. Inténtalo de nuevo.", "Could not generate the trip right now. Try again."],
+  "El motor IA encara no està configurat al servidor. Falta OPENAI_API_KEY.": ["El planificador de IA todavía no está configurado.", "The AI planner is not configured yet."],
+  "Indica la sortida, les persones i els dies. Afegeix un pressupost o una destinació.": ["Indica el origen, los viajeros y los días. Añade un presupuesto o un destino.", "Enter your departure city, travellers and days. Add a budget or destination."],
+  "Viatge personalitzat": ["Viaje personalizado", "Tailor-made trip"],
+  "Cant. de dies": ["Número de días", "Number of days"],
+  "No es pot consultar la IA.": ["No se puede consultar la IA.", "The AI planner is unavailable."],
+  "Compara les despeses i l’itinerari de cada nivell per a les dates indicades.": ["Compara los gastos y el itinerario de cada nivel para las fechas indicadas.", "Compare the costs and itinerary of each tier for your dates."],
+  "propostes dins del pressupost total indicat.": ["propuestas dentro del presupuesto total indicado.", "proposals within your total budget."],
+  "Cap ruta encaixa amb aquestes condicions.": ["Ninguna ruta encaja con estas condiciones.", "No itinerary matches these conditions."],
+  "Dies (opcional: calcula els dies possibles)": ["Días (opcional: calcular la duración posible)", "Days (optional: suggest a duration)"],
+  "Viatja a la teva manera": ["Viaja a tu manera", "Travel your way"],
+  "Forfets, esquís i snowboard": ["Forfaits, esquís y snowboard", "Ski passes, skis and snowboards"],
+  "Cardem el Camp | Fes la maleta, que marxem!": ["Cardem el Camp | ¡Haz la maleta, que nos vamos!", "Cardem el Camp: Pack your bags, let’s go!"],
+  "Destinació": ["Destino", "Destination"],
+  "En blanc = calcula dies": ["En blanco = calcular días", "Leave blank to suggest a duration"],
+  "Barcelona, París, Roma...": ["Barcelona, París, Roma...", "Barcelona, Paris, Rome..."],
+  "Torna a generar el viatge per veure’l en aquest idioma.": ["Vuelve a generar el viaje para verlo en este idioma.", "Generate the trip again to see it in this language."],
+  "Cap escapada fora d’Espanya encaixa amb aquestes condicions i pressupost.": ["Ninguna escapada fuera de España encaja con estas condiciones y presupuesto.", "No getaways outside Spain fit these conditions and budget."]
+};
+const sourceText = new WeakMap();
+const localizedAttributes = ['placeholder', 'alt', 'aria-label'];
+const sourceAttributes = new WeakMap();
+
+function localizeText(text, inline = false) {
+  if (lang.value === 'ca') return text;
+  const index = lang.value === 'es' ? 0 : 1;
+  const key = text.trim();
+  if (Object.hasOwn(interfaceCopy, key)) return text.replace(key, interfaceCopy[key][index]);
+  return inline ? text.replace(localizedFragments, entry => interfaceCopy[entry][index]) : text;
+}
+
+const localizedFragments = new RegExp(
+  '(?<![\\p{L}])(?:' + Object.keys(interfaceCopy).sort((a,b) => b.length - a.length)
+    .map(key => key.replace(/[.*+?^${}()|[\[\]\\]/g, '\\$&')).join('|') + ')(?![\\p{L}])',
+  'gu'
+);
+
+function localizeNode(root, inline = false) {
+  const nodes = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+    acceptNode: node => node.parentElement.closest('script, style') ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT
+  });
+  while (nodes.nextNode()) {
+    const node = nodes.currentNode;
+    if (!sourceText.has(node)) sourceText.set(node, node.data);
+    const translated = localizeText(sourceText.get(node), inline);
+    if (translated !== node.data) node.data = translated;
+  }
+  if (!root.querySelectorAll) return;
+  for (const element of root.querySelectorAll('[placeholder], [alt], [aria-label]')) {
+    if (!sourceAttributes.has(element)) sourceAttributes.set(element, Object.fromEntries(
+      localizedAttributes.filter(name => element.hasAttribute(name)).map(name => [name, element.getAttribute(name)])
+    ));
+    for (const [name, source] of Object.entries(sourceAttributes.get(element))) {
+      element.setAttribute(name, localizeText(source));
+    }
+  }
+}
+
+const updatedResults = ['results','planOutput','flightResults','cityGuideOutput'].map(id => document.getElementById(id));
+const resultsObserver = new MutationObserver(records => {
+  for (const root of new Set(records.map(record => updatedResults.find(container => container.contains(record.target))).filter(Boolean))) {
+    localizeNode(root, true);
+  }
+});
+for (const root of updatedResults) resultsObserver.observe(root, {childList:true, subtree:true});
+
+function selectLanguage(language) {
+  const plannerOutput = document.getElementById('planOutput');
+  if (lang.value !== language && plannerOutput.hasChildNodes()) {
+    plannerOutput.textContent = 'Torna a generar el viatge per veure’l en aquest idioma.';
+  }
+  lang.value = language;
+  localizeNode(document);
+  lang.dispatchEvent(new Event('change'));
+  for (const flag of document.querySelectorAll('[data-language]')) {
+    flag.setAttribute('aria-pressed', String(flag.dataset.language === language));
+  }
+  try { localStorage.setItem('cardem-language', language); } catch {}
+  for (const root of updatedResults) localizeNode(root, true);
+}
+for (const flag of document.querySelectorAll('[data-language]')) {
+  flag.addEventListener('click', () => selectLanguage(flag.dataset.language));
+}
+let savedLanguage = 'ca';
+try { savedLanguage = localStorage.getItem('cardem-language') || 'ca'; } catch {}
+selectLanguage(['ca','es','en'].includes(savedLanguage) ? savedLanguage : 'ca');
+
 </script></body></html>
