@@ -507,7 +507,7 @@ function attachTripQuotes(container, option, trip, automaticSearches) {
         for (const offer of data.offers) {
           const code = offer.currency || data.currency;
           const row = document.createElement('p');
-          const name = offer.name || [offer.airline, ...offer.legs.map(leg => leg.map(segment =>
+          const name = offer.name || [offer.airline || data.provider || 'Vol', ...(Array.isArray(offer.legs) ? offer.legs : []).map(leg => (Array.isArray(leg) ? leg : []).map(segment =>
             [segment.from, segment.departure?.replace('T', ' '), '→', segment.to, segment.arrival?.replace('T', ' ')].join(' ')
           ).join(' / ')), offer.checkedBagIncluded ? 'Maleta facturada inclosa' : 'Maleta facturada no confirmada',
           'Vàlid fins a ' + new Date(offer.expiresAt).toLocaleString(trip.language)].join(' · ');
@@ -695,7 +695,7 @@ const expenseLabels = {
 const euros = new Intl.NumberFormat(lang.value, {style:'currency', currency:'EUR', maximumFractionDigits:2});
 const options = plan.options || [];
 const placesFor = items => items.map(option => option.stages?.[0]?.place).filter(Boolean);
-const supplemental = payload.budget !== null && payload.budget / payload.travelers < 1000 && !payload.destination &&
+const supplemental = payload.budget !== null && !payload.destination &&
   payload.transport === 'auto' && payload.rental !== 'yes' && payload.quality !== 'premium' ?
   internationalTrips(payload.budget, payload.travelers, payload.departure, payload.days, payload.date,
     placesFor(options), payload.experience).filter(card => !options.some(option => option.themeId === card.theme)) : [];
