@@ -398,15 +398,26 @@ const comparison = options.map(option => {
   }).join('');
   const route = stages ? '<p><b>Anada</b> ' + safeText(option.arrival || '') + '</p><ol>' + stages +
     '</ol><p><b>Tornada</b> ' + safeText(option.return || '') + '</p>' : '';
+  const isPackage = option.kind === 'package';
   const rows = Object.entries(expenseLabels).map(([key, label]) =>
-    '<li>' + label + ' <b>' + euros.format(option.expenses[key]) + '</b></li>').join('');
+    '<li>' + (isPackage && key === 'travel' ? 'Paquet d’agència estimat' : label) + ' <b>' + euros.format(option.expenses[key]) + '</b></li>').join('');
   const balance = option.remaining == null ? '' : ' · Marge disponible ' + euros.format(option.remaining);
   const tier = { premium: 'Superior', standard: 'Estàndard', economy: 'Econòmica' }[option.tier];
   const link = 'https://www.google.com/search?q=' + encodeURIComponent(option.search || option.title);
+  const searchArea = String(option.stages?.[0]?.place || option.title);
+  const travelerText = payload.travelers === 1 ? '1 adulto habitación individual' : payload.travelers + ' adultos';
+  const agencyQuery = encodeURIComponent(['paquete agencia vuelo hotel', searchArea, 'desde', payload.departure,
+    payload.date, option.days + ' días', travelerText].join(' '));
+  const agencyLinks = payload.budget !== null && payload.budget / payload.travelers >= 1000 &&
+    ['auto', 'flight'].includes(payload.transport) ?
+    ' · <a href="https://www.google.com/search?q=' + agencyQuery + '" target="_blank" rel="noopener noreferrer">Compara paquets d’agència</a>' +
+    (option.countryCode === 'DO' ?
+      ' · <a href="https://www.logitravel.com/viajes/america/republica-dominicana/punta-cana/todo-incluido/" target="_blank" rel="noopener noreferrer">Logitravel · Punta Cana</a>' +
+      (/^barcelona(?:,|$)/i.test(payload.departure) ? ' · <a href="https://viajes.staytick.es/viajes-organizados-por-republica-dominicana/punta-cana-desde-barcelona/" target="_blank" rel="noopener noreferrer">StayTick · Punta Cana des de Barcelona</a>' : '') : '') : '';
   return '<article class="proposal"><h4>' + (tier ? tier + ' · ' : Number.isInteger(option.themeId) ? tripThemes[option.themeId] + ' · ' : '') + safeText(option.title) + ' · ' + safeText(option.days) +
-    ' dies</h4><p>' + safeText(option.summary) + '</p>' + route + '<details open><summary>Desglossament estimat</summary><ul>' + rows + '</ul><p><b>Total estimat ' +
+    ' dies</h4>' + (isPackage ? '<p><b>Paquet d’agència · pendent de cotització</b></p>' : '') + '<p>' + safeText(option.summary) + '</p>' + route + '<details open><summary>Desglossament estimat</summary><ul>' + rows + '</ul><p><b>Total estimat ' +
     euros.format(option.total) + ' per al grup</b> · ' + euros.format(option.perPerson ?? option.total / payload.travelers) + ' per persona' + balance +
-    '</p></details><a href="' + link + '" target="_blank" rel="noopener noreferrer">Contrasta preus i dates</a></article>';
+    '</p></details><a href="' + link + '" target="_blank" rel="noopener noreferrer">Contrasta preus i dates</a>' + agencyLinks + '</article>';
 }).join('');
 const overview = supplemental.length ? (options.length + supplemental.length) +
   ' escapades orientatives fora d’Espanya dins del pressupost total.' : plan.overview || '';
@@ -454,6 +465,10 @@ planOutput.scrollIntoView({behavior:'smooth',block:'start'});
 });
 
 const interfaceCopy = {
+  "Paquet d’agència estimat": ["Paquete de agencia estimado", "Estimated agency package"],
+  "Paquet d’agència · pendent de cotització": ["Paquete de agencia · pendiente de cotización", "Agency package · quote required"],
+  "Compara paquets d’agència": ["Compara paquetes de agencia", "Compare agency packages"],
+  "StayTick · Punta Cana des de Barcelona": ["StayTick · Punta Cana desde Barcelona", "StayTick · Punta Cana from Barcelona"],
   "Experiència opcional": ["Experiencia opcional", "Optional experience"],
   "Ex. Nadal, cervesa trapenca o música en directe": ["Ej. Navidad, cerveza trapense o música en directo", "E.g. Christmas markets, Trappist beer or live music"],
   "Web oficial": ["Web oficial", "Official website"],

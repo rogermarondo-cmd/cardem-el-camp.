@@ -132,11 +132,11 @@ app.post('/api/plan',async(req,res)=>{
     x.previousDestinations.filter(place => typeof place === 'string').slice(0, 24).map(place => place.slice(0, 100)) : [];
   prompt.experience = typeof x.experience === 'string' ? x.experience.trim().slice(0, 180) : '';
   const budgetPerTraveler = budget === null ? 0 : budget / travelers;
-  const preferLongHaul = budgetPerTraveler >= 1000 && (days === null || days >= 6) &&
+  const preferLongHaul = budgetPerTraveler >= 1000 &&
     ['auto', 'flight', ''].includes(prompt.transport);
   const europeAndNearby = new Set(('AD AL AM AT AZ BA BE BG BY CH CY CZ DE DK DZ EE EG ES FI FR GB GE GI GR HR HU IE IL IS IT JO KZ LB LI LT LU LV LY MA MC MD ME MK MT NL NO PL PS PT RO RS RU SE SI SK SM SY TN TR UA VA XK').split(' '));
   const ideas = preferLongHaul ?
-    ['Colòmbia, Equador, Guatemala', 'Malàisia, Taiwan, Filipines', 'Senegal, Kenya, Tanzània', 'Perú, Uruguai, Costa Rica', 'Corea del Sud, Vietnam, Índia', 'Sud-àfrica, Madagascar, Cap Verd', 'Oman, Sri Lanka, Uzbekistan', 'Canadà, Mèxic, Brasil'] :
+    ['Colòmbia, Equador, Guatemala', 'Malàisia, Taiwan, Filipines', 'Senegal, Kenya, Tanzània', 'Perú, Uruguai, Costa Rica', 'Corea del Sud, Vietnam, Índia', 'Sud-àfrica, Madagascar, Cap Verd', 'Oman, Sri Lanka, Uzbekistan', 'Canadà, Mèxic, Brasil', 'República Dominicana, Carib mexicà, Colòmbia'] :
     ['Letònia, Estònia, Lituània', 'Polònia, Txèquia, Eslovàquia', 'Àustria, Alemanya, Suïssa', 'Eslovènia, Croàcia, Bòsnia', 'Romania, Bulgària, Sèrbia', 'Albània, Macedònia del Nord, Grècia', 'Bèlgica fora de Brussel·les, Alsàcia, Països Baixos', 'Irlanda, Escòcia, Gal·les', 'Dinamarca, Suècia, Finlàndia'];
   if (!destination) {
     for (let i = ideas.length - 1; i > 0; i--) {
@@ -159,7 +159,8 @@ Amb pressupost i destinació oberta, genera fins a dues opcions viables per tema
 Converteix experience, si existeix, en propostes que hi encaixin. Segons les dates, explora Advent i pessebres a l’Alsàcia, Salzburg, Berlín o Cracòvia; comprova la temporada i evita afirmar dates d’esdeveniments no verificades. Per a cervesa, considera Munic i les rutes trapenques de Valònia amb Chimay i Orval, detallant etapes, trasllats, tastos i despeses, sense prometre accés a fàbriques o clausura. Per a diversió, considera Riga amb música en directe, Tallinas iela, barris i activitats socials obertes a tothom. Evita generalitzacions sobre la població. Descriu activitats concretes i els costos estimats. Una data flexible és la primera data possible de sortida. No proposis sortides anteriors. Inclou les dates concretes proposades quan es conegui la data inicial.
 Quan budget sigui null, la destinació és fixa i el missatge et dirà quin nivell concret has de pressupostar. Retorna una ruta completa en aquest nivell. Econòmic: allotjament senzill, transport compartit i activitats essencials. Estàndard: hotels còmodes, trasllats equilibrats i activitats seleccionades. Superior: hotels de categoria alta, trasllats privats quan aportin valor i experiències destacades. Respecta les preferències de transport i durada. En aquest mode el nivell té prioritat sobre la categoria d'hotel preseleccionada.
 Respecta les preferències de transport, lloguer, interessos, ritme i categoria d’hotel. Respecta la data i els dies si s'indiquen, comptant els vols de nit i el canvi de dia quan correspongui. Amb dies oberts, proposa una durada realista per a cada ruta. internationalIdeas són punts de partida per a sortides des d’Espanya, amb llibertat per mirar altres països segons l’origen. Cada opció és independent i té les seves pròpies etapes ordenades amb el codi ISO del país de cada etapa, rang de dies, nits, activitats concretes i el trasllat des de l'etapa anterior (avió intern, cotxe, ferri, tren, autobús o trasllat privat segons correspongui). Arrival i return indiquen els aeroports o ports i connexions plausibles d'anada i tornada. No comptis l'origen com a pernoctació. En creuers indica el port i trasllat d'embarcament, escales i nits a bord.
-Calcula imports enters en EUR per a tot el grup. travel és anada i tornada de llarg radi, local inclou tots els trasllats interns, equipatge de vols interns, lloguer, carburant, peatges i aparcament si escau; stay allotjament; cruise cabina; meals menjar no inclòs; activities activitats; fees taxes, equipatge internacional i propines aplicables; reserve imprevistos. Evita duplicats i respecta el límit si n'hi ha. Proposa una millora concreta amb el marge que quedi i explica inclusions a summary sense repetir el total. kind és trip o cruise, search és una consulta de cerca amb destinació i dates si n'hi ha.
+A partir de 1.000 € per persona, si el transport permet volar, compara una opció per lliure i, quan es pugui estimar de manera plausible, una opció de paquet d’agència. Explora la República Dominicana (Punta Cana o Bávaro) i altres alternatives del Carib, Amèrica, Àsia o Àfrica; ni el Carib ni un tot inclòs són obligatoris si el cost des de l’origen no hi cap. Considera resort tot inclòs amb braçalet, avió i trasllats, i circuits organitzats quan encaixin. Per a un paquet usa kind=package. Posa el preu estimat del paquet complet a expenses.travel, i pressuposta a la resta només allò que el paquet no inclogui. Digues al summary quins conceptes quedarien coberts, què queda fora i que l’import d’agència és pendent de cotització. Per a una persona calcula habitació individual o el suplement si escau, mai preu per persona en doble com si fos preu individual. Si proposes un altre aeroport de sortida, inclou el cost i el temps d’arribar-hi i tornar a l’origen. Respecta la durada fixa; si no se n’ha indicat, tria la durada que encaixi comptant trajectes i nits. No afirmis que hi ha una oferta d’agència contractable sense dades verificades.
+Calcula imports enters en EUR per a tot el grup. travel és anada i tornada de llarg radi, local inclou tots els trasllats interns, equipatge de vols interns, lloguer, carburant, peatges i aparcament si escau; stay allotjament; cruise cabina; meals menjar no inclòs; activities activitats; fees taxes, equipatge internacional i propines aplicables; reserve imprevistos. Evita duplicats i respecta el límit si n'hi ha. Proposa una millora concreta amb el marge que quedi i explica inclusions a summary sense repetir el total. kind és trip, cruise o package, search és una consulta de cerca amb destinació i dates si n'hi ha.
 Preus i rutes són estimacions. Evita inventar disponibilitat, horaris, números de vol, tarifes confirmades o enllaços. No afirmis que has comprovat preus reals. Mantén cada etapa breu.`;
   const tiers = budget === null ? ['premium', 'standard', 'economy'] : [null];
   const requests = budget === null ? tiers.map(tier => ({ tier })) :
@@ -235,11 +236,13 @@ Preus i rutes són estimacions. Evita inventar disponibilitat, horaris, números
       const selectedPlaces = new Set();
       const selectedCountries = new Set();
       const chosen = [];
+      let packageSelected = false;
       for (const themeId of themes.keys()) {
         const rank = option => {
           const country = String(option.countryCode).toUpperCase();
           const base = placeKey(option.stages[0].place);
           return (preferLongHaul && !europeAndNearby.has(country) ? 8 : 0) +
+            (preferLongHaul && !packageSelected && option.kind === 'package' ? 3 : 0) +
             (previous.has(base) ? 0 : 4) + (selectedCountries.has(country) ? 0 : 2);
         };
         const candidates = plan.options.filter(option => option.themeId === themeId &&
@@ -249,6 +252,7 @@ Preus i rutes són estimacions. Evita inventar disponibilitat, horaris, números
         if (!best.length) continue;
         const selected = destination ? best[0] : best[randomInt(best.length)];
         chosen.push(selected);
+        packageSelected ||= selected.kind === 'package';
         selectedPlaces.add(placeKey(selected.stages[0].place));
         selectedCountries.add(String(selected.countryCode).toUpperCase());
       }
