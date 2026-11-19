@@ -126,7 +126,7 @@ async function requestAITrip(){
 const host=location.hostname.endsWith('github.io')?'':location.origin;
 if(!host)return false;
 const get=id=>document.getElementById(id);
-const payload={departure:get('plFrom').value.trim(),destination:get('plWhere').value.trim(),budget:Number(get('plMoney').value),travelers:Number(get('plTravelers').value),days:get('plDuration').value?Number(get('plDuration').value):null,date:get('plDepart').value,flex:get('plFlex').value,pace:get('plPace').value,interest:get('plInterest').value,quality:get('plHotelQuality').value};
+const payload={departure:get('plFrom').value.trim(),destination:get('plWhere').value.trim(),budget:Number(get('plMoney').value),travelers:Number(get('plTravelers').value),days:get('plDuration').value?Number(get('plDuration').value):null,date:get('plDepart').value,flex:get('plFlex').value,pace:get('plPace').value,interest:get('plInterest').value,quality:get('plHotelQuality').value,transport:get('plMode').value,rental:get('plCar').value,style:get('plStyleValue').value};
 const output=get('planOutput');output.innerHTML='<p class="planhint">🌍 La IA està preparant la proposta…</p>';
 try{
 const response=await fetch('/api/plan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
@@ -139,7 +139,23 @@ const place=String(st.place||'Etapa'),query=encodeURIComponent(place);
 return '<article class="proposal"><h3>📍 Etapa '+(i+1)+': '+safeText(place)+'</h3><p><b>'+safeText(st.nights||0)+' nits</b></p><p>🗺️ '+safeText(Array.isArray(st.visits)?st.visits.join(', '):st.visits||'')+'</p><p>🚆 '+safeText(st.transport||'Transport per determinar')+'</p><p>'+safeText(st.reason||'')+'</p><p><a href="https://www.booking.com/searchresults.html?ss='+query+'" target="_blank" rel="noopener noreferrer">Buscar hotels a '+safeText(place)+'</a> · <a href="https://www.google.com/travel/flights?q='+encodeURIComponent('Flights to '+place)+'" target="_blank" rel="noopener noreferrer">Buscar vols</a> · <a href="https://www.google.com/search?q='+encodeURIComponent('excursions '+place)+'" target="_blank" rel="noopener noreferrer">Excursions</a></p></article>';
 }).join('');
 const bullets=a=>Array.isArray(a)?'<ul>'+a.map(v=>'<li>'+safeText(v)+'</li>').join('')+'</ul>':'';
-output.innerHTML='<h2>✨ '+safeText(plan.title||'Viatge personalitzat')+'</h2><p>'+safeText(plan.overview||'')+'</p>'+blocks+'<h3>🚗 Logística</h3>'+bullets(plan.logistics)+'<h3>💶 Pressupost</h3>'+bullets(plan.budget_notes)+'<h3>ℹ️ Abans de reservar</h3>'+bullets(plan.caveats)+'<p class="planhint"><b>Itinerari creat amb IA, sense preus ni disponibilitat en temps real.</b> Comprova dates, allotjaments, transport i activitats als enllaços abans de pagar.</p>';
+const expenseLabels = {
+  travel: 'Anada i tornada', stay: 'Allotjament', cruise: 'Tarifa del creuer',
+  meals: 'Menjar no inclòs', local: 'Mobilitat local', activities: 'Activitats i excursions',
+  fees: 'Taxes i propines', reserve: 'Reserva per a imprevistos'
+};
+const euros = new Intl.NumberFormat('ca-ES', {style:'currency', currency:'EUR', maximumFractionDigits:2});
+const comparison = (plan.options || []).map(option => {
+  const rows = Object.entries(expenseLabels).map(([key, label]) =>
+    '<li>' + label + ' <b>' + euros.format(option.expenses[key]) + '</b></li>').join('');
+  const balance = option.remaining < 0 ? 'Supera el pressupost en ' : 'Marge disponible ';
+  const link = 'https://www.google.com/search?q=' + encodeURIComponent(option.search || option.title);
+  return '<article class="proposal"><h4>' + safeText(option.title) + ' · ' + safeText(option.days) +
+    ' dies</h4><p>' + safeText(option.summary) + '</p><ul>' + rows + '</ul><p><b>Total estimat ' +
+    euros.format(option.total) + '</b> · ' + balance + euros.format(Math.abs(option.remaining)) +
+    '</p><a href="' + link + '" target="_blank" rel="noopener noreferrer">Contrasta preus i dates</a></article>';
+}).join('');
+output.innerHTML='<h2>✨ '+safeText(plan.title||'Viatge personalitzat')+'</h2><p>'+safeText(plan.overview||'')+'</p>'+blocks+'<h3>🚗 Logística</h3>'+bullets(plan.logistics)+'<h3>💶 Pressupost</h3>'+(comparison||bullets(plan.budget_notes))+'<h3>ℹ️ Abans de reservar</h3>'+bullets(plan.caveats)+'<p class="planhint"><b>Itinerari creat amb IA, sense preus ni disponibilitat en temps real.</b> Comprova dates, allotjaments, transport i activitats als enllaços abans de pagar.</p>';
 }catch{ return false; }
 output.scrollIntoView({behavior:'smooth',block:'start'});return true;
 }
