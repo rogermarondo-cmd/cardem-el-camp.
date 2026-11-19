@@ -413,7 +413,7 @@ function attachTripQuotes(container, option, trip) {
     return;
   }
   const details = document.createElement('details');
-  details.innerHTML = '<summary>Consulta preus per hotel i trajecte</summary>';
+  details.innerHTML = '<summary>Consulta tarifes de vols i allotjaments</summary>';
   const total = document.createElement('p');
   total.setAttribute('aria-live', 'polite');
   details.append(total);
@@ -507,7 +507,8 @@ function attachTripQuotes(container, option, trip) {
           ).join(' / ')), offer.checkedBagIncluded ? 'Maleta facturada inclosa' : 'Maleta facturada no confirmada',
           'Vàlid fins a ' + new Date(offer.expiresAt).toLocaleString(trip.language)].join(' · ');
           const description = document.createElement(offer.url ? 'a' : 'span');
-          description.textContent = name + ' · ' + currency(code).format(offer.amount);
+          description.textContent = name + ' · ' + currency(code).format(offer.amount) + ' per al grup' +
+            (flight ? ' · ' + currency(code).format(offer.amount / trip.travelers) + ' per persona' : ' per a tota l’estada');
           if (offer.url) {
             description.href = offer.url;
             description.target = '_blank';
@@ -610,6 +611,38 @@ function attachTripQuotes(container, option, trip) {
   refresh();
 }
 
+function tripCostDetails(option, euros) {
+  const stages = option.stages || [];
+  const amountOf = value => Number.isSafeInteger(value) && value >= 0 ? value : null;
+  const validCosts = values => Array.isArray(values) ? values.filter(item =>
+    typeof item?.label === 'string' && item.label.trim() && amountOf(item.amount) !== null
+  ) : [];
+  const itemize = (items, total, pendingLabel) => {
+    const priced = items.filter(item => item.amount !== null);
+    const sum = priced.reduce((value, item) => value + item.amount, 0);
+    const reconciles = sum <= total;
+    const rows = items.map(item => '<li>' + safeText(item.label) + ' · <b>' +
+      (reconciles && item.amount !== null ? euros.format(item.amount) :
+        total === 0 && option.kind === 'package' ? 'Preu dins del paquet segons la proposta' : 'Pendent de desglossar') + '</b></li>');
+    if (total > 0 && (!reconciles || sum < total)) {
+      rows.push('<li>' + pendingLabel + ' · <b>' + euros.format(reconciles ? total - sum : total) + '</b></li>');
+    }
+    return rows.length ? '<ul>' + rows.join('') + '</ul>' : '';
+  };
+  const travel = itemize(validCosts(option.travelCosts), option.expenses.travel, 'Import conjunt pendent de desglossar');
+  const stays = itemize(stages.filter(stage => Number(stage.nights) > 0).map(stage => ({
+    label: stage.place + ' · ' + (stage.stayName || 'Allotjament pendent de concretar') +
+      ' · ' + stage.nights + ' nits' + (stage.checkin && stage.checkout ? ' · ' + stage.checkin + ' → ' + stage.checkout : ''),
+    amount: amountOf(stage.stayAmount)
+  })), option.expenses.stay, 'Import d’allotjament pendent de desglossar');
+  const local = itemize(stages.flatMap(stage => validCosts(stage.localCosts).map(item => ({
+    ...item, label: stage.place + ' · ' + item.label
+  }))), option.expenses.local, 'Import de transport local pendent de desglossar');
+  return (travel ? '<h5>' + (option.kind === 'package' ? 'Paquet d’agència' : 'Vols i trajectes principals') + '</h5>' + travel : '') +
+    (stays ? '<h5>Allotjaments proposats</h5>' + stays : '') +
+    (local ? '<h5>Trasllats i transport públic</h5>' + local : '');
+}
+
 async function requestAITrip(){
 const host=location.hostname.endsWith('github.io')?'':location.origin;
 if(!host)return false;
@@ -659,7 +692,7 @@ const comparison = options.map(option => {
   const route = stages ? '<p><b>Anada</b> ' + safeText(option.arrival || '') + '</p><ol>' + stages +
     '</ol><p><b>Tornada</b> ' + safeText(option.return || '') + '</p>' : '';
   const isPackage = option.kind === 'package';
-  const rows = Object.entries(expenseLabels).map(([key, label]) =>
+  const rows = Object.entries(expenseLabels).filter(([key]) => !['travel', 'stay', 'local'].includes(key)).map(([key, label]) =>
     '<li>' + (isPackage && key === 'travel' ? 'Paquet d’agència estimat' : label) + ' <b>' + euros.format(option.expenses[key]) + '</b></li>').join('');
   const balance = option.remaining == null ? '' : ' · Marge disponible ' + euros.format(option.remaining);
   const tier = { premium: 'Superior', standard: 'Estàndard', economy: 'Econòmica' }[option.tier];
@@ -675,7 +708,7 @@ const comparison = options.map(option => {
       ' · <a href="https://www.logitravel.com/viajes/america/republica-dominicana/punta-cana/todo-incluido/" target="_blank" rel="noopener noreferrer">Logitravel · Punta Cana</a>' +
       (/^barcelona(?:,|$)/i.test(payload.departure) ? ' · <a href="https://viajes.staytick.es/viajes-organizados-por-republica-dominicana/punta-cana-desde-barcelona/" target="_blank" rel="noopener noreferrer">StayTick · Punta Cana des de Barcelona</a>' : '') : '') : '';
   return '<article class="proposal"><h4>' + (tier ? tier + ' · ' : Number.isInteger(option.themeId) ? tripThemes[option.themeId] + ' · ' : '') + safeText(option.title) + ' · ' + safeText(option.days) +
-    ' dies</h4>' + (isPackage ? '<p><b>Paquet d’agència · pendent de cotització</b></p>' : '') + '<p>' + safeText(option.summary) + '</p>' + route + '<details open><summary>Desglossament estimat</summary><ul>' + rows + '</ul><p><b>Total estimat ' +
+    ' dies</h4>' + (isPackage ? '<p><b>Paquet d’agència · pendent de cotització</b></p>' : '') + '<p>' + safeText(option.summary) + '</p>' + route + '<details open><summary>Desglossament estimat per al grup</summary>' + tripCostDetails(option, euros) + '<ul>' + rows + '</ul><p><b>Total estimat ' +
     euros.format(option.total) + ' per al grup</b> · ' + euros.format(option.perPerson ?? option.total / payload.travelers) + ' per persona' + balance +
     '</p></details><div data-trip-quotes></div><a href="' + link + '" target="_blank" rel="noopener noreferrer">Contrasta preus i dates</a>' + agencyLinks + '</article>';
 }).join('');
