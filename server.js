@@ -1,4 +1,5 @@
 import { installAmadeus } from './amadeus.js';
+import { summarizeQuotes } from './pricing.js';
 import { randomInt } from 'node:crypto';
 import express from 'express';
 import {readFile} from 'node:fs/promises';
@@ -188,6 +189,18 @@ app.post('/api/stays', async (req, res) => {
   }
 });
 
+// Pricing is a subtotal of independently verified offers, not an invented full trip cost.
+app.post('/api/price-summary', (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  try {
+    const { flights, stays, travelers, budget } = req.body || {};
+    if (JSON.stringify(req.body || {}).length > 16000) return res.status(413).json({ error: 'Sol·licitud massa gran.' });
+    return res.json(summarizeQuotes({ flights, stays, travelers, budget }));
+  } catch {
+    return res.status(400).json({ error: 'Dades de tarifes o pressupost incorrectes.' });
+  }
+});
+
 const hits=new Map();
 app.post('/api/plan',async(req,res)=>{
   const now=Date.now(),ip=req.ip||'unknown',recent=(hits.get(ip)||[]).filter(t=>now-t<3600000);
@@ -213,7 +226,7 @@ app.post('/api/plan',async(req,res)=>{
     x.previousDestinations.filter(place => typeof place === 'string').slice(0, 24).map(place => place.slice(0, 100)) : [];
   prompt.experience = typeof x.experience === 'string' ? x.experience.trim().slice(0, 180) : '';
   const budgetPerTraveler = budget === null ? 0 : budget / travelers;
-  const outsideEurope = !destination && budgetPerTraveler >= 1000;
+  const outsideEurope = false; // Long-haul is a preference, never an exclusion of European destinations.
   const preferLongHaul = budgetPerTraveler >= 1000;
   const europe = new Set('AD AL AM AT AZ BA BE BG BY CH CY CZ DE DK EE ES FI FO FR GB GE GG GI GR HR HU IE IM IS IT JE KZ LI LT LU LV MC MD ME MK MT NL NO PL PT RO RS RU SE SI SJ SK SM TR UA VA XK'.split(' '));
   const europeAndNearby = new Set(('AD AL AM AT AZ BA BE BG BY CH CY CZ DE DK DZ EE EG ES FI FR GB GE GI GR HR HU IE IL IS IT JO KZ LB LI LT LU LV LY MA MC MD ME MK MT NL NO PL PS PT RO RS RU SE SI SK SM SY TN TR UA VA XK').split(' '));
@@ -321,6 +334,29 @@ Preus i rutes són estimacions. Evita inventar disponibilitat, horaris, números
       return [{ ...option, stages, total, remaining: budget === null ? null : budget - total, perPerson: total / travelers }];
     });
     plan.options = validOptions(plan.options);
+    // A failed first batch should not mean there are no destinations.
+    // Retry with a broader brief, still respecting the original budget.
+    if (budget !== null && plan.options.length === 0 && !controller.signal.aborted) {
+      const fallback = await Promise.allSettled([
+        requestPlan({
+          themes: themes.slice(0, 3).map((title, themeId) => ({ title, themeId })),
+          internationalIdeas: ['Europa', 'Mediterrani', 'Balcans', 'Nord d’Àfrica'],
+          outsideEurope: false,
+          preferLongHaul: false,
+          alternativeSearch: true
+        }),
+        requestPlan({
+          themes: themes.slice(3, 6).map((title, index) => ({ title, themeId: index + 3 })),
+          internationalIdeas: ['Europa central', 'Europa de l’Est', 'Mediterrani'],
+          outsideEurope: false,
+          preferLongHaul: false,
+          alternativeSearch: true
+        })
+      ]);
+      for (const result of fallback) {
+        if (result.status === 'fulfilled') plan.options.push(...validOptions(result.value.options));
+      }
+    }
     if (outsideEurope && !controller.signal.aborted) {
       const existingPlaces = [...new Set(plan.options.map(option => option.stages[0].place))];
       const distinctCount = new Set(existingPlaces.map(placeKey)).size;
@@ -382,52 +418,19 @@ Preus i rutes són estimacions. Evita inventar disponibilitat, horaris, números
       }
       plan.options.sort((a, b) => a.themeId - b.themeId);
     }
+    // Never fabricate tier prices by multiplying a different hotel's or route's costs.
+    // Only show independently generated and validated offers.
     if (budget === null && plan.options.length) {
-      const baseline = plan.options.find(option => option.tier === 'standard') || plan.options[0];
-      const levels = {
-        premium: {
-          label: 'Confort superior',
-          summary: 'Hotels de categoria alta, més pressupost per a trasllats còmodes i activitats guiades.',
-          factors: { stay: 1.7, cruise: 1.55, meals: 1.4, local: 1.4, activities: 1.5, reserve: 1.25 }
-        },
-        standard: {
-          label: 'Confort estàndard',
-          summary: 'Hotels còmodes, combinació de transport col·lectiu i trasllats, i activitats seleccionades.',
-          factors: {}
-        },
-        economy: {
-          label: 'Viatge econòmic',
-          summary: 'Allotjaments senzills, transport compartit quan sigui possible i activitats essencials.',
-          factors: { stay: 0.6, cruise: 0.75, meals: 0.7, local: 0.8, activities: 0.65, reserve: 0.85 }
-        }
-      };
-      const ordered = tiers.map(tier => plan.options.find(option => option.tier === tier));
-      const distinctPrices = ordered.every((option, index) =>
-        option && (index === 0 || option.total < ordered[index - 1].total));
-      if (!distinctPrices) {
-        const reference = levels[baseline.tier].factors;
-        plan.options = tiers.map(tier => {
-          const level = levels[tier];
-          const expenses = Object.fromEntries(categories.map(category => [
-            category, Math.round(baseline.expenses[category] *
-              (level.factors[category] ?? 1) / (reference[category] ?? 1))
-          ]));
-          const total = categories.reduce((sum, category) => sum + expenses[category], 0);
-          return {
-            ...baseline, tier, expenses, total, perPerson: total / travelers,
-            stages: tier === baseline.tier ? baseline.stages : baseline.stages.map(stage => ({
-              ...stage, stayName: undefined, stayAmount: undefined, localCosts: undefined
-            })),
-            title: level.label + ' · ' + destination,
-            summary: level.summary + ' Estimació comparativa sobre el mateix recorregut.'
-          };
-        });
-        plan.overview += ' Les tres opcions comparteixen recorregut i varien en allotjament, mobilitat i experiències.';
+      const byTier = new Map(plan.options.map(option => [option.tier, option]));
+      plan.options = tiers.flatMap(tier => byTier.has(tier) ? [byTier.get(tier)] : []);
+      if (plan.options.length < tiers.length) {
+        plan.caveats = [...(Array.isArray(plan.caveats) ? plan.caveats : []),
+          'No hi ha una proposta independent i coherent per a tots els nivells de pressupost. No s’han inventat tarifes per completar la comparativa.'];
       }
     }
     if (budget === null && !plan.options.length) throw Error('No valid route for tier comparison');
     if (!plan.options.length && budget !== null) {
-      plan.overview = destination ? 'Cap ruta encaixa amb aquestes condicions.' : 'Cap escapada fora d’Espanya encaixa amb aquestes condicions i pressupost.';
+      plan.overview = destination ? 'Cap ruta encaixa amb aquestes condicions.' : 'No hem pogut validar cap proposta dins del pressupost. Prova una data flexible o una destinació concreta.';
     }
     res.json({plan,livePrices:false,bookingEnabled:false});
   }catch(e){console.error('Plan generation failed',e.message);res.status(502).json({error:'No hem pogut generar el viatge ara mateix. Torna-ho a provar.'})}
