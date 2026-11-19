@@ -130,7 +130,7 @@ const payload={departure:get('plFrom').value.trim(),destination:get('plWhere').v
 const output=get('planOutput');output.innerHTML='<p class="planhint">🌍 La IA està preparant la proposta…</p>';
 try{
 const response=await fetch('/api/plan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-if(response.status>=500)return false;
+
 const data=await response.json();
 if(!response.ok){output.innerHTML='<p class="planhint">⚠️ '+safeText(data.error||'No es pot consultar la IA.')+'</p>';return true}
 const plan=data.plan||{};
@@ -146,17 +146,27 @@ const expenseLabels = {
 };
 const euros = new Intl.NumberFormat('ca-ES', {style:'currency', currency:'EUR', maximumFractionDigits:2});
 const comparison = (plan.options || []).map(option => {
+  const stages = (option.stages || []).map(stage => {
+    const visits = Array.isArray(stage.visits) ? stage.visits.join(', ') : '';
+    const query = encodeURIComponent('transport ' + (stage.transport || '') + ' ' + stage.place);
+    return '<li><strong>' + safeText(stage.dayRange || '') + ' · ' + safeText(stage.place) +
+      '</strong> · ' + safeText(stage.nights || 0) + ' nits<p>' + safeText(stage.transport || '') +
+      ' · <a href="https://www.google.com/search?q=' + query + '" target="_blank" rel="noopener noreferrer">Consulta el trasllat</a></p><p>' +
+      safeText(visits) + '</p></li>';
+  }).join('');
+  const route = stages ? '<p><b>Anada</b> ' + safeText(option.arrival || '') + '</p><ol>' + stages +
+    '</ol><p><b>Tornada</b> ' + safeText(option.return || '') + '</p>' : '';
   const rows = Object.entries(expenseLabels).map(([key, label]) =>
     '<li>' + label + ' <b>' + euros.format(option.expenses[key]) + '</b></li>').join('');
   const balance = option.remaining < 0 ? 'Supera el pressupost en ' : 'Marge disponible ';
   const link = 'https://www.google.com/search?q=' + encodeURIComponent(option.search || option.title);
   return '<article class="proposal"><h4>' + safeText(option.title) + ' · ' + safeText(option.days) +
-    ' dies</h4><p>' + safeText(option.summary) + '</p><ul>' + rows + '</ul><p><b>Total estimat ' +
+    ' dies</h4><p>' + safeText(option.summary) + '</p>' + route + '<details open><summary>Desglossament estimat</summary><ul>' + rows + '</ul><p><b>Total estimat ' +
     euros.format(option.total) + '</b> · ' + balance + euros.format(Math.abs(option.remaining)) +
-    '</p><a href="' + link + '" target="_blank" rel="noopener noreferrer">Contrasta preus i dates</a></article>';
+    '</p></details><a href="' + link + '" target="_blank" rel="noopener noreferrer">Contrasta preus i dates</a></article>';
 }).join('');
-output.innerHTML='<h2>✨ '+safeText(plan.title||'Viatge personalitzat')+'</h2><p>'+safeText(plan.overview||'')+'</p>'+blocks+'<h3>🚗 Logística</h3>'+bullets(plan.logistics)+'<h3>💶 Pressupost</h3>'+(comparison||bullets(plan.budget_notes))+'<h3>ℹ️ Abans de reservar</h3>'+bullets(plan.caveats)+'<p class="planhint"><b>Itinerari creat amb IA, sense preus ni disponibilitat en temps real.</b> Comprova dates, allotjaments, transport i activitats als enllaços abans de pagar.</p>';
-}catch{ return false; }
+output.innerHTML='<h2>✨ '+safeText(plan.title||'Viatge personalitzat')+'</h2><p>'+safeText(plan.overview||'')+'</p>'+(comparison||blocks+bullets(plan.logistics)+bullets(plan.budget_notes))+'<h3>ℹ️ Abans de reservar</h3>'+bullets(plan.caveats)+'<p class="planhint"><b>Itinerari creat amb IA, sense preus ni disponibilitat en temps real.</b> Comprova dates, allotjaments, transport i activitats als enllaços abans de pagar.</p>';
+}catch{ output.innerHTML='<p class="planhint">No hem pogut connectar amb el planificador. Torna-ho a provar.</p>'; }
 output.scrollIntoView({behavior:'smooth',block:'start'});return true;
 }
 document.getElementById('plannerForm').addEventListener('submit',async e=>{
