@@ -226,12 +226,12 @@ function nearbyTrips(amount, people, from, days, date) {
     if (used.has(theme) || (days !== null && days !== duration) || total > amount) return [];
     used.add(theme);
     const query = encodeURIComponent(from + ' ' + place + ' ' + date + ' transport activitats');
-    return ['<article class="proposal"><h3>' + tripThemes[theme] + ' · ' + place + '</h3><p>' +
+    return [{ theme, html: '<article class="proposal"><h3>' + tripThemes[theme] + ' · ' + place + '</h3><p>' +
       duration + ' dies · ' + itinerary + '</p><p><b>Total orientatiu del grup ' + total +
       ' €</b> · Transport ' + groupCosts[0] + ' € · Allotjament ' + groupCosts[1] +
       ' € · Menjar ' + groupCosts[2] + ' € · Activitats ' + groupCosts[3] +
       ' €</p><a href="https://www.google.com/search?q=' + query +
-      '" target="_blank" rel="noopener noreferrer">Consulta preus i disponibilitat</a></article>'];
+      '" target="_blank" rel="noopener noreferrer">Consulta preus i disponibilitat</a></article>' }];
   });
 }
 
@@ -260,7 +260,12 @@ const expenseLabels = {
   fees: 'Taxes i propines', reserve: 'Reserva per a imprevistos'
 };
 const euros = new Intl.NumberFormat('ca-ES', {style:'currency', currency:'EUR', maximumFractionDigits:2});
-const comparison = (plan.options || []).map(option => {
+const options = plan.options || [];
+const supplemental = payload.budget !== null && !payload.destination &&
+  payload.transport === 'auto' && payload.rental !== 'yes' && payload.quality !== 'premium' ?
+  (nearbyTrips(payload.budget, payload.travelers, payload.departure, payload.days, payload.date) || [])
+    .filter(card => !options.some(option => option.themeId === card.theme)) : [];
+const comparison = options.map(option => {
   const stages = (option.stages || []).map(stage => {
     const visits = Array.isArray(stage.visits) ? stage.visits.join(', ') : '';
     const query = encodeURIComponent('transport ' + (stage.transport || '') + ' ' + stage.place);
@@ -281,7 +286,9 @@ const comparison = (plan.options || []).map(option => {
     euros.format(option.total) + ' per al grup</b> · ' + euros.format(option.perPerson ?? option.total / payload.travelers) + ' per persona' + balance +
     '</p></details><a href="' + link + '" target="_blank" rel="noopener noreferrer">Contrasta preus i dates</a></article>';
 }).join('');
-output.innerHTML='<h2>✨ '+safeText(plan.title||'Viatge personalitzat')+'</h2><p>'+safeText(plan.overview||'')+'</p>'+(comparison||blocks+bullets(plan.logistics)+bullets(plan.budget_notes))+'<h3>ℹ️ Abans de reservar</h3>'+bullets(plan.caveats)+'<p class="planhint"><b>Itinerari creat amb IA, sense preus ni disponibilitat en temps real.</b> Comprova dates, allotjaments, transport i activitats als enllaços abans de pagar.</p>';
+const overview = supplemental.length ? (options.length + supplemental.length) +
+  ' propostes orientatives dins del pressupost total.' : plan.overview || '';
+output.innerHTML='<h2>✨ '+safeText(plan.title||'Viatge personalitzat')+'</h2><p>'+safeText(overview)+'</p>'+(comparison||blocks+bullets(plan.logistics)+bullets(plan.budget_notes))+supplemental.map(card => card.html).join('')+'<h3>ℹ️ Abans de reservar</h3>'+bullets(plan.caveats)+'<p class="planhint"><b>Itineraris orientatius, sense preus ni disponibilitat en temps real.</b> Comprova dates, allotjaments, transport i activitats als enllaços abans de pagar.</p>';
 }catch{ if(payload.budget !== null && !payload.destination)return false; output.innerHTML='<p class="planhint">No hem pogut connectar amb el planificador. Torna-ho a provar.</p>'; }
 output.scrollIntoView({behavior:'smooth',block:'start'});return true;
 }
@@ -303,7 +310,7 @@ if(!where && budget!==null && mode==='auto' && rent!=='yes' && plHotelQuality.va
   if(nearby?.length){
     planOutput.innerHTML='<h2>Viatges a la carta</h2><p>' + nearby.length +
       ' propostes orientatives' + (departure ? ' a partir de ' + safeText(departure) : '') +
-      '. Consulta disponibilitat, horaris i tarifes als enllaços.</p>' + nearby.join('');
+      '. Consulta disponibilitat, horaris i tarifes als enllaços.</p>' + nearby.map(card => card.html).join('');
     planOutput.scrollIntoView({behavior:'smooth',block:'start'});
     return;
   }
