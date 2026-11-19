@@ -1,9 +1,11 @@
+import { installAmadeus } from './amadeus.js';
 import { randomInt } from 'node:crypto';
 import express from 'express';
 import {readFile} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
 import path from 'node:path';
 const app=express();
+installAmadeus(app);
 app.disable('x-powered-by');
 app.use(express.json({limit:'20kb'}));
 const dir=path.dirname(fileURLToPath(import.meta.url));
@@ -17,7 +19,7 @@ app.use((req,res,next)=>{
   next();
 });
 app.get('/',async(req,res)=>res.type('html').send(await readFile(path.join(dir,'index.html'),'utf8')));
-app.get('/api/health',(req,res)=>res.json({ok:true,aiConfigured:!!process.env.OPENAI_API_KEY,stayPricingConfigured:!!bookingHeaders(),providerPricingConnected:process.env.DUFFEL_LIVE_TOKEN?.startsWith('duffel_live_') ?? false}));
+app.get('/api/health',(req,res)=>res.json({ok:true,aiConfigured:!!process.env.OPENAI_API_KEY,amadeusConfigured:!!(process.env.AMADEUS_CLIENT_ID&&process.env.AMADEUS_CLIENT_SECRET),amadeusEnvironment:process.env.AMADEUS_ENV==='production'?'production':'test',stayPricingConfigured:!!bookingHeaders(),providerPricingConnected:process.env.DUFFEL_LIVE_TOKEN?.startsWith('duffel_live_') ?? false}));
 const validDate = date => /^\d{4}-\d{2}-\d{2}$/.test(date) &&
     Number.isFinite(Date.parse(date)) && new Date(date).toISOString().slice(0, 10) === date;
 const flightSearchHits = new Map();
