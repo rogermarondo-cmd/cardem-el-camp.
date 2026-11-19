@@ -382,47 +382,14 @@ Preus i rutes són estimacions. Evita inventar disponibilitat, horaris, números
       }
       plan.options.sort((a, b) => a.themeId - b.themeId);
     }
+    // Never fabricate tier prices by multiplying a different hotel's or route's costs.
+    // Only show independently generated and validated offers.
     if (budget === null && plan.options.length) {
-      const baseline = plan.options.find(option => option.tier === 'standard') || plan.options[0];
-      const levels = {
-        premium: {
-          label: 'Confort superior',
-          summary: 'Hotels de categoria alta, més pressupost per a trasllats còmodes i activitats guiades.',
-          factors: { stay: 1.7, cruise: 1.55, meals: 1.4, local: 1.4, activities: 1.5, reserve: 1.25 }
-        },
-        standard: {
-          label: 'Confort estàndard',
-          summary: 'Hotels còmodes, combinació de transport col·lectiu i trasllats, i activitats seleccionades.',
-          factors: {}
-        },
-        economy: {
-          label: 'Viatge econòmic',
-          summary: 'Allotjaments senzills, transport compartit quan sigui possible i activitats essencials.',
-          factors: { stay: 0.6, cruise: 0.75, meals: 0.7, local: 0.8, activities: 0.65, reserve: 0.85 }
-        }
-      };
-      const ordered = tiers.map(tier => plan.options.find(option => option.tier === tier));
-      const distinctPrices = ordered.every((option, index) =>
-        option && (index === 0 || option.total < ordered[index - 1].total));
-      if (!distinctPrices) {
-        const reference = levels[baseline.tier].factors;
-        plan.options = tiers.map(tier => {
-          const level = levels[tier];
-          const expenses = Object.fromEntries(categories.map(category => [
-            category, Math.round(baseline.expenses[category] *
-              (level.factors[category] ?? 1) / (reference[category] ?? 1))
-          ]));
-          const total = categories.reduce((sum, category) => sum + expenses[category], 0);
-          return {
-            ...baseline, tier, expenses, total, perPerson: total / travelers,
-            stages: tier === baseline.tier ? baseline.stages : baseline.stages.map(stage => ({
-              ...stage, stayName: undefined, stayAmount: undefined, localCosts: undefined
-            })),
-            title: level.label + ' · ' + destination,
-            summary: level.summary + ' Estimació comparativa sobre el mateix recorregut.'
-          };
-        });
-        plan.overview += ' Les tres opcions comparteixen recorregut i varien en allotjament, mobilitat i experiències.';
+      const byTier = new Map(plan.options.map(option => [option.tier, option]));
+      plan.options = tiers.flatMap(tier => byTier.has(tier) ? [byTier.get(tier)] : []);
+      if (plan.options.length < tiers.length) {
+        plan.caveats = [...(Array.isArray(plan.caveats) ? plan.caveats : []),
+          'No hi ha una proposta independent i coherent per a tots els nivells de pressupost. No s’han inventat tarifes per completar la comparativa.'];
       }
     }
     if (budget === null && !plan.options.length) throw Error('No valid route for tier comparison');
