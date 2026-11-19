@@ -68,10 +68,7 @@ function circuitMaxDays(p,amount,people,from,mode,rent){let best=0;for(let d=1;d
 function safeText(t){return String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 
 const circuits={
-'Buenos Aires':[['Buenos Aires',5,'🏙️','Obelisc, San Telmo, Recoleta i La Boca','metro'],['Rosario',5,'🚗','Monumento a la Bandera, ribera del Paraná i barris històrics','bus'],['El Bolsón',3,'🏔️','Cerro Piltriquitrón, Lago Puelo i senderisme','flight-car','Bariloche']],
-'Nova York':[['Nova York',5,'🏙️','Central Park, museus, Brooklyn i Manhattan','metro'],['Boston',5,'🚆','Freedom Trail, Harvard, museus i port','train']],
-'Bangkok':[['Bangkok',4,'🛕','Temples, mercats i canals','metro'],['Chiang Mai',4,'🏍️','Temples, muntanyes i excursions','flight-moto'],['Krabi',4,'🏝️','Illes, platges i caiac','flight']],
-'Bali':[['Ubud',5,'🌿','Arrossars, temples i cascades','moto'],['Amed',3,'🤿','Snorkel, costa i pobles','moto'],['Uluwatu',4,'🏄','Platja, penya-segats i temples','car']],
+'Hanoi':[['Hanoi',2,'🏮','Barri antic, Temple de la Literatura i menjar de carrer','walk'],['Ninh Binh',2,'🚣','Tam Coc, Trang An i Hang Mua','train'],['Ha Long',2,'⛵','Creuer per la badia i coves','bus'],['Hue',2,'🏯','Ciutadella imperial i tombes reials','flight'],['Hoi An',3,'🏮','Nucli antic, My Son, platges i taller de cuina','car'],['Da Nang',2,'🌉','Marble Mountains i costa','car'],['Ho Chi Minh',3,'🏙️','Palau de la Reunificació, mercats i túnels de Cu Chi','flight'],['Delta del Mekong',2,'🛶','Canals, pobles i mercats','bus']],
 'Tòquio':[['Tòquio',5,'🗼','Shibuya, Asakusa i museus','metro'],['Kyoto',4,'⛩️','Fushimi Inari, temples i jardins','train'],['Osaka',3,'🍜','Dotonbori, castell i gastronomia','train']],
 'Roma':[['Roma',4,'🏛️','Coliseu, Vaticà i Trastevere','metro'],['Florència',3,'🎨','Duomo, Uffizi i Ponte Vecchio','train'],['Siena',2,'🏰','Piazza del Campo i pobles de la Toscana','car']],
 'Porto':[['Porto',3,'🍷','Ribeira, cellers i ponts','walk'],['Braga',2,'⛪','Bom Jesus i centre històric','train'],['Guimarães',2,'🏰','Castell i centre medieval','train']],
@@ -84,8 +81,16 @@ const circuits={
 function qualityFactor(){return plHotelQuality.value==='premium'?1.95:plHotelQuality.value==='comfort'?1.45:1}
 function routeFor(p,days){
 const stages=circuits[p[0]]||[[p[0],3,'📍',p.slice(5).join(', '),'walk'],[(p[0]+' i voltants'),2,'🚗','Pobles propers, paisatges i excursions','car']];
-let left=days;const route=[];let index=0;
-while(left>0&&index<stages.length){const st=stages[index],count=index===stages.length-1?left:Math.min(left,st[1]);route.push({...{city:st[0],days:count,emoji:st[2],activities:st[3],mode:st[4],airport:st[5]||''}});left-=count;index++}
+const route=[];let remaining=days;let index=0;
+while(remaining>0){
+const st=stages[index%stages.length];
+const target=days<=5?Math.min(2,st[1]):Math.min(3,st[1]);
+const count=Math.min(remaining,target);
+route.push({city:st[0],days:count,emoji:st[2],activities:st[3],mode:st[4],airport:st[5]||''});
+remaining-=count;index++;
+if(index>=stages.length&&remaining>0&&stages.length<3){break}
+}
+if(remaining>0&&route.length)route[route.length-1].days+=remaining;
 return route;
 }
 function circuitEstimate(p,days,people,from,mode,rent){
@@ -95,9 +100,9 @@ let hotel=0,local=0,connections=0,extras=0;
 for(const [i,st] of stages.entries()){
 const cityPremium=i===0?1:i===1?0.9:0.85;
 hotel+=Math.round(p[3]*cityPremium*quality*Math.max(1,people/2)*Math.max(0,st.days-(i===stages.length-1?1:0)));
-if(i>0){connections+=st.mode==='flight'||st.mode==='flight-car'||st.mode==='flight-moto'?Math.round(100*people):st.mode==='train'?Math.round(35*people):Math.round(25*people)}
-if(st.mode==='moto'||st.mode==='flight-moto')local+=Math.round(22*st.days);
-if(st.mode==='car'||st.mode==='flight-car')local+=Math.round(45*st.days);
+if(i>0){connections+=st.mode==='flight'||st.mode==='flight-car'||st.mode==='flight-moto'?Math.round(160*people):st.mode==='train'?Math.round(35*people):Math.round(25*people)}
+if(st.mode==='moto'||st.mode==='flight-moto')local+=Math.round(25*st.days);
+if(st.mode==='car'||st.mode==='flight-car')local+=Math.round(42*Math.min(st.days,2));
 extras+=Math.round(12*st.days*people);
 }
 const total=base.travel+hotel+base.meals+base.local+local+connections+extras;
@@ -108,7 +113,7 @@ function tripCard(p,d,amount,people,from,mode,rent){
 const b=circuitEstimate(p,d,people,from,mode,rent),left=amount-b.total,addOn=Math.max(0,Math.round(left-amount*.05)),final=b.total+addOn;
 const stages=b.stages.map((st,i)=>{
 const city=encodeURIComponent(st.city),q=encodeURIComponent('hotels '+st.city+' 8.5 rating');
-const transport=st.mode==='flight'||st.mode==='flight-car'||st.mode==='flight-moto'?'✈️ Vol intern (comprovar disponibilitat)':st.mode==='train'?'🚆 Tren':st.mode==='bus'?'🚌 Autobús':st.mode==='boat'?'⛴️ Vaixell':st.mode==='moto'?'🏍️ Moto de lloguer (si és segura i legal)':st.mode==='car'?'🚗 Cotxe de lloguer':st.mode==='flight-car'?'✈️ Vol + 🚗 cotxe':st.mode==='flight-moto'?'✈️ Vol + 🏍️ moto':'🚶 A peu o transport públic';
+const transport=st.mode==='flight'||st.mode==='flight-car'||st.mode==='flight-moto'?'✈️ Vol intern (comprovar disponibilitat)':st.mode==='train'?'🚆 Tren':st.mode==='bus'?'🚌 Autobús':st.mode==='boat'?'⛴️ Vaixell':st.mode==='moto'?'🚕 Conductor local; moto només amb permís vàlid, assegurança i experiència':st.mode==='car'?'🚗 Trasllat amb conductor o cotxe segons seguretat':st.mode==='flight-car'?'✈️ Vol + 🚗 cotxe':st.mode==='flight-moto'?'✈️ Vol + 🚕 transport local':'🚶 A peu o transport públic';
 return '<section style="border-left:4px solid #10a8c5;padding:8px 14px;margin:14px 0;background:#fff;border-radius:8px"><h4>'+st.emoji+' '+safeText(st.city)+' · '+st.days+' dies / '+Math.max(0,st.days-(i===b.stages.length-1?1:0))+' nits</h4><p>'+safeText(st.activities)+'</p><p><b>Desplaçament:</b> '+transport+'</p><a href="https://www.booking.com/searchresults.html?ss='+city+'&order=price" target="_blank" rel="noopener noreferrer">🏨 Hotels a '+safeText(st.city)+'</a><a href="https://www.google.com/search?q='+q+'" target="_blank" rel="noopener noreferrer">⭐ Comparar hotels de categoria superior</a></section>'
 }).join('');
 const legs=[from,...b.stages.map(x=>x.airport||x.city),from].map((city,i,arr)=>i<arr.length-1?'<a href="https://www.google.com/travel/flights?q='+encodeURIComponent('Flights from '+city+' to '+arr[i+1])+'" target="_blank" rel="noopener noreferrer">✈️ '+safeText(city)+' → '+safeText(arr[i+1])+'</a>':'').join(' ');
@@ -132,7 +137,7 @@ for(const x of fits){if(!used.has(x.p[1])){diverse.push(x);used.add(x.p[1])}if(d
 for(const x of fits){if(diverse.length>=22)break;if(!diverse.includes(x))diverse.push(x)}
 html='<h3>🌎 Propostes mundials · '+amount+' € · '+people+' persones</h3><p>Prioritzem destinacions internacionals i pressupostos aprofitats (amb fons d’activitats i millores). Sense dies indicats, proposem fins a 21 dies.</p>'+(diverse.length?diverse.map(x=>tripCard(x.p,x.days,amount,people,from,mode,rent)).join(''):'<p>Cap proposta orientativa encaixa amb aquest pressupost. Prova de modificar-lo.</p>');
 }
-planOutput.innerHTML='<p class="planhint"><b>SIMULADOR DE PRESSUPOST (VERSIÓ 12), no cercador de preus reals.</b> Les tarifes són hipòtesis orientatives, no verificades, i poden variar molt segons dates, temporada, equipatge, origen, nombre de persones i disponibilitat. Les activitats són suggeriments, no excursions reservades. Els hotels 7,5/10 o més s’han de verificar als proveïdors. Els itineraris entre ciutats són propostes, no rutes ni preus confirmats.</p>'+html;
+planOutput.innerHTML='<p class="planhint"><b>SIMULADOR DE CIRCUITS (VERSIÓ 14), no cercador de preus reals.</b> Les tarifes són hipòtesis orientatives, no verificades, i poden variar molt segons dates, temporada, equipatge, origen, nombre de persones i disponibilitat. Les activitats són suggeriments, no excursions reservades. Els hotels 7,5/10 o més s’han de verificar als proveïdors. Els itineraris entre ciutats són propostes, no rutes ni preus confirmats.</p>'+html;
 planOutput.scrollIntoView({behavior:'smooth',block:'start'});
 });
 </script></body></html>
