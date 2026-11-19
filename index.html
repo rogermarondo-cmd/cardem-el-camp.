@@ -119,10 +119,34 @@ return '<section style="border-left:4px solid #10a8c5;padding:8px 14px;margin:14
 const legs=[from,...b.stages.map(x=>x.airport||x.city),from].map((city,i,arr)=>i<arr.length-1?'<a href="https://www.google.com/travel/flights?q='+encodeURIComponent('Flights from '+city+' to '+arr[i+1])+'" target="_blank" rel="noopener noreferrer">✈️ '+safeText(city)+' → '+safeText(arr[i+1])+'</a>':'').join(' ');
 return '<article class="proposal"><h3>🌎 '+safeText(p[0])+' · '+safeText(p[1])+'</h3><h2>'+d+' dies · '+b.stages.length+' etapes</h2><p><strong>💶 '+final+' € / '+amount+' €</strong> · '+people+' persones · marge orientatiu '+(amount-final)+' €</p><ul><li>✈️ Anada i tornada: '+b.travel+' €</li><li>🚆 Vols interns i trasllats entre ciutats: '+b.connections+' €</li><li>🏨 Hotels de categoria '+(plHotelQuality.value==='premium'?'superior':plHotelQuality.value==='comfort'?'confort':'econòmica')+': '+b.hotel+' €</li><li>🍽️ Menjar: '+b.meals+' €</li><li>🚗🏍️ Mobilitat local i lloguers: '+b.local+' €</li><li>🎟️ Activitats: '+b.extras+' €</li><li>✨ Millores i experiències addicionals: '+addOn+' €</li></ul><h4>🗺️ Ruta amb pernoctacions a diferents llocs</h4>'+stages+'<h4>✈️ Consulta els trams</h4><p>'+legs+'</p><p class="planhint">Preus i trams no verificats; cal confirmar vols, allotjaments, conducció i horaris abans de reservar.</p></article>';
 }
-document.getElementById('plannerForm').addEventListener('submit',e=>{
+
+// El motor IA s'utilitza només si el servidor està configurat.
+// A GitHub Pages, sense servidor, es conserva el simulador i s'identifica clarament.
+async function requestAITrip(){
+const host=location.hostname.endsWith('github.io')?'':location.origin;
+if(!host)return false;
+const get=id=>document.getElementById(id);
+const payload={departure:get('plFrom').value.trim(),destination:get('plWhere').value.trim(),budget:Number(get('plMoney').value),travelers:Number(get('plTravelers').value),days:get('plDuration').value?Number(get('plDuration').value):null,date:get('plDepart').value,flex:get('plFlex').value,pace:get('plPace').value,interest:get('plInterest').value,quality:get('plHotelQuality').value};
+const output=get('planOutput');output.innerHTML='<p class="planhint">🌍 La IA està preparant la proposta…</p>';
+try{
+const response=await fetch('/api/plan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+const data=await response.json();
+if(!response.ok){output.innerHTML='<p class="planhint">⚠️ '+safeText(data.error||'No es pot consultar la IA.')+'</p>';return true}
+const plan=data.plan||{};
+const blocks=(Array.isArray(plan.itinerary)?plan.itinerary:[]).map((st,i)=>{
+const place=String(st.place||'Etapa'),query=encodeURIComponent(place);
+return '<article class="proposal"><h3>📍 Etapa '+(i+1)+': '+safeText(place)+'</h3><p><b>'+safeText(st.nights||0)+' nits</b></p><p>🗺️ '+safeText(Array.isArray(st.visits)?st.visits.join(', '):st.visits||'')+'</p><p>🚆 '+safeText(st.transport||'Transport per determinar')+'</p><p>'+safeText(st.reason||'')+'</p><p><a href="https://www.booking.com/searchresults.html?ss='+query+'" target="_blank" rel="noopener noreferrer">Buscar hotels a '+safeText(place)+'</a> · <a href="https://www.google.com/travel/flights?q='+encodeURIComponent('Flights to '+place)+'" target="_blank" rel="noopener noreferrer">Buscar vols</a> · <a href="https://www.google.com/search?q='+encodeURIComponent('excursions '+place)+'" target="_blank" rel="noopener noreferrer">Excursions</a></p></article>';
+}).join('');
+const bullets=a=>Array.isArray(a)?'<ul>'+a.map(v=>'<li>'+safeText(v)+'</li>').join('')+'</ul>':'';
+output.innerHTML='<h2>✨ '+safeText(plan.title||'Viatge personalitzat')+'</h2><p>'+safeText(plan.overview||'')+'</p>'+blocks+'<h3>🚗 Logística</h3>'+bullets(plan.logistics)+'<h3>💶 Pressupost</h3>'+bullets(plan.budget_notes)+'<h3>ℹ️ Abans de reservar</h3>'+bullets(plan.caveats)+'<p class="planhint"><b>Itinerari creat amb IA, sense preus ni disponibilitat en temps real.</b> Comprova dates, allotjaments, transport i activitats als enllaços abans de pagar.</p>';
+}catch(e){output.innerHTML='<p class="planhint">⚠️ No s’ha pogut connectar amb el servidor IA. Torna-ho a provar.</p>'}
+output.scrollIntoView({behavior:'smooth',block:'start'});return true;
+}
+document.getElementById('plannerForm').addEventListener('submit',async e=>{
 e.preventDefault();
 const amount=Number(plMoney.value),people=Number(plTravelers.value),from=plFrom.value.trim(),where=plWhere.value.trim(),rawDays=plDuration.value.trim(),days=rawDays?Number(rawDays):null,mode=plMode.value,rent=plCar.value;const departure=document.getElementById('plDepart').value,flex=document.getElementById('plFlex').value,pace=document.getElementById('plPace').value,interest=document.getElementById('plInterest').value;
 if(!from||amount<100||people<1||days!==null&&(days<1||days>45))return;
+if(await requestAITrip())return;
 let html='';
 if(where){
 const p=locateTrip(where);
