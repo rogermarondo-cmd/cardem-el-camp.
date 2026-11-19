@@ -407,6 +407,209 @@ function internationalTrips(amount, people, from, days, date, excludedPlaces = [
   });
 }
 
+function attachTripQuotes(container, option, trip) {
+  if (option.kind === 'package' || option.kind === 'cruise') {
+    container.textContent = 'Demana una cotització al proveïdor del paquet o del creuer.';
+    return;
+  }
+  const details = document.createElement('details');
+  details.innerHTML = '<summary>Consulta preus per hotel i trajecte</summary>';
+  const total = document.createElement('p');
+  total.setAttribute('aria-live', 'polite');
+  details.append(total);
+  container.append(details);
+
+  const selected = new Map();
+  const entered = new Map();
+  let lines = 0;
+  const currency = code => new Intl.NumberFormat(trip.language, { style: 'currency', currency: code });
+  const refresh = () => {
+    const pending = lines - selected.size - entered.size;
+    const subtotal = [...selected.values()].reduce((sum, amount) => sum + amount, 0);
+    const manual = [...entered.values()].reduce((sum, amount) => sum + amount, 0);
+    const eur = currency('EUR');
+    total.textContent = (selected.size
+      ? 'Subtotal de tarifes seleccionades: ' + eur.format(subtotal / 100) +
+        ' per al grup · ' + eur.format(subtotal / (100 * trip.travelers)) + ' per persona. '
+      : '') + (entered.size ? 'Transport introduït manualment: ' + eur.format(manual / 100) + ' per al grup. ' : '') +
+      (selected.size && entered.size ? 'Subtotal combinat: ' + eur.format((subtotal + manual) / 100) + ' per al grup. ' : '') +
+      (pending ? pending + ' partides pendents de preu en EUR. ' : '') +
+      'Confirma disponibilitat i càrrecs abans de reservar.';
+  };
+  function addSearch(title, type, defaults) {
+    lines++;
+    const form = document.createElement('form');
+    const heading = document.createElement('h5');
+    heading.textContent = title;
+    const grid = document.createElement('div');
+    grid.className = 'plannergrid';
+    const flight = type === 'flights';
+    const fields = flight
+      ? [['from', 'Aeroport de sortida'], ['to', 'Aeroport de destinació'], ['outbound', 'Anada', 'date'],
+         ...(defaults.inbound ? [['inbound', 'Tornada', 'date']] : [])]
+      : [['airport', 'Aeroport de la zona'], ['checkin', 'Entrada', 'date'], ['checkout', 'Sortida', 'date'], ['rooms', 'Habitacions', 'number']];
+    for (const [name, label, kind] of fields) {
+      const wrapper = document.createElement('label');
+      wrapper.textContent = label;
+      const input = document.createElement('input');
+      input.name = name;
+      input.type = kind || 'text';
+      input.required = true;
+      if (!kind) {
+        input.pattern = '[A-Za-z]{3}';
+        input.maxLength = 3;
+      }
+      if (kind === 'number') {
+        input.min = 1;
+        input.max = trip.travelers;
+      }
+      input.value = defaults[name] ?? '';
+      wrapper.append(input);
+      grid.append(wrapper);
+    }
+    const baggage = document.createElement('label');
+    if (flight) baggage.innerHTML = '<input type="checkbox" name="checkedBag"> Maleta facturada per adult';
+    const button = document.createElement('button');
+    button.textContent = 'Consulta tarifes';
+    const results = document.createElement('div');
+    results.setAttribute('aria-live', 'polite');
+    form.append(heading, grid, baggage, button, results);
+    details.append(form);
+    form.addEventListener('input', event => {
+      if (results.contains(event.target)) return;
+      selected.delete(form);
+      results.replaceChildren();
+      refresh();
+    });
+    form.addEventListener('submit', async event => {
+      event.preventDefault();
+      selected.delete(form);
+      refresh();
+      const input = Object.fromEntries(new FormData(form));
+      input.adults = trip.travelers;
+      input.checkedBag = flight && form.elements.checkedBag.checked;
+      const controls = [...form.elements];
+      controls.forEach(control => { control.disabled = true; });
+      results.textContent = 'Consultant tarifes…';
+      try {
+        const response = await fetch('/api/' + type, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(input)
+        });
+        const data = await response.json();
+        if (!response.ok) throw Error(data.error);
+        results.textContent = data.offers.length ? data.provider + ' · ' +
+          new Date(data.searchedAt).toLocaleString(trip.language) : 'El proveïdor no ha retornat cap tarifa.';
+        for (const offer of data.offers) {
+          const code = offer.currency || data.currency;
+          const row = document.createElement('p');
+          const name = offer.name || [offer.airline, ...offer.legs.map(leg => leg.map(segment =>
+            [segment.from, segment.departure?.replace('T', ' '), '→', segment.to, segment.arrival?.replace('T', ' ')].join(' ')
+          ).join(' / ')), offer.checkedBagIncluded ? 'Maleta facturada inclosa' : 'Maleta facturada no confirmada',
+          'Vàlid fins a ' + new Date(offer.expiresAt).toLocaleString(trip.language)].join(' · ');
+          const description = document.createElement(offer.url ? 'a' : 'span');
+          description.textContent = name + ' · ' + currency(code).format(offer.amount);
+          if (offer.url) {
+            description.href = offer.url;
+            description.target = '_blank';
+            description.rel = 'noopener noreferrer';
+          }
+          row.append(description);
+          if (code === 'EUR') {
+            const choose = document.createElement('button');
+            choose.type = 'button';
+            choose.textContent = 'Afegeix al subtotal';
+            choose.onclick = () => {
+              if (offer.expiresAt && Date.parse(offer.expiresAt) <= Date.now()) {
+                choose.disabled = true;
+                choose.textContent = 'Tarifa caducada';
+                return;
+              }
+              const entry = Math.round(Number(offer.amount) * 100);
+              selected.set(form, entry);
+              for (const pick of results.querySelectorAll('button[aria-pressed]')) pick.setAttribute('aria-pressed', String(pick === choose));
+              if (offer.expiresAt) {
+                const expires = Date.parse(offer.expiresAt);
+                setTimeout(() => {
+                  choose.disabled = true;
+                  choose.textContent = 'Tarifa caducada';
+                  if (choose.getAttribute('aria-pressed') === 'true' && results.contains(choose)) {
+                    selected.delete(form);
+                    refresh();
+                  }
+                }, Math.min(expires - Date.now(), 2147483647));
+              }
+              refresh();
+            };
+            choose.setAttribute('aria-pressed', 'false');
+            row.append(' ', choose);
+          }
+          results.append(row);
+        }
+      } catch (error) {
+        results.textContent = error.message || 'No s’ha pogut consultar la tarifa.';
+      } finally {
+        controls.forEach(control => { control.disabled = false; });
+      }
+    });
+  }
+  function addPending(label, search) {
+    lines++;
+    const row = document.createElement('p');
+    const link = document.createElement('a');
+    link.href = 'https://www.google.com/search?q=' + encodeURIComponent(search);
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    link.textContent = 'Consulta el proveïdor';
+    const costLabel = document.createElement('label');
+    costLabel.textContent = 'Preu del proveïdor (€ per al grup)';
+    const cost = document.createElement('input');
+    cost.type = 'number';
+    cost.min = '0';
+    cost.max = '1200000';
+    cost.step = '0.01';
+    const status = document.createElement('span');
+    status.textContent = 'Pendent de cotització';
+    cost.addEventListener('input', () => {
+      if (cost.value !== '' && cost.validity.valid) {
+        entered.set(cost, Math.round(cost.valueAsNumber * 100));
+        status.textContent = 'Preu introduït manualment';
+      } else {
+        entered.delete(cost);
+        status.textContent = 'Pendent de cotització';
+      }
+      refresh();
+    });
+    costLabel.append(cost);
+    row.append(label + ' · ', status, ' · ', link, ' ', costLabel);
+    details.append(row);
+  }
+
+  const mainFlight = option.flight;
+  if (mainFlight || trip.transport === 'flight') {
+    addSearch('Vol principal', 'flights', mainFlight || { outbound: trip.date });
+    if (option.returnFlight) addSearch('Vol de tornada', 'flights', option.returnFlight);
+    else if (!mainFlight?.inbound) addSearch('Vol de tornada', 'flights', { from: mainFlight?.to, to: mainFlight?.from });
+  } else {
+    addPending('Anada · ' + (option.arrival || trip.departure), option.arrival || trip.departure);
+    addPending('Tornada · ' + (option.return || trip.departure), option.return || trip.departure);
+  }
+  for (const [index, stage] of option.stages.entries()) {
+    if (index && stage.transferFlight) {
+      addSearch('Vol intern · ' + stage.place, 'flights', stage.transferFlight);
+    } else if (index && stage.transport) {
+      addPending(stage.place + ' · ' + stage.transport, stage.transport + ' ' + stage.place);
+    }
+    if (Number(stage.nights) > 0) {
+      addSearch('Allotjament · ' + stage.place, 'stays', {
+        airport: stage.airport, checkin: stage.checkin, checkout: stage.checkout,
+        rooms: Math.ceil(trip.travelers / 2)
+      });
+    }
+  }
+  if (trip.rental === 'yes') addPending('Lloguer de cotxe', 'lloguer cotxe ' + option.stages[0]?.place);
+  refresh();
+}
+
 async function requestAITrip(){
 const host=location.hostname.endsWith('github.io')?'':location.origin;
 if(!host)return false;
@@ -474,11 +677,14 @@ const comparison = options.map(option => {
   return '<article class="proposal"><h4>' + (tier ? tier + ' · ' : Number.isInteger(option.themeId) ? tripThemes[option.themeId] + ' · ' : '') + safeText(option.title) + ' · ' + safeText(option.days) +
     ' dies</h4>' + (isPackage ? '<p><b>Paquet d’agència · pendent de cotització</b></p>' : '') + '<p>' + safeText(option.summary) + '</p>' + route + '<details open><summary>Desglossament estimat</summary><ul>' + rows + '</ul><p><b>Total estimat ' +
     euros.format(option.total) + ' per al grup</b> · ' + euros.format(option.perPerson ?? option.total / payload.travelers) + ' per persona' + balance +
-    '</p></details><a href="' + link + '" target="_blank" rel="noopener noreferrer">Contrasta preus i dates</a>' + agencyLinks + '</article>';
+    '</p></details><div data-trip-quotes></div><a href="' + link + '" target="_blank" rel="noopener noreferrer">Contrasta preus i dates</a>' + agencyLinks + '</article>';
 }).join('');
 const overview = supplemental.length ? (options.length + supplemental.length) +
   ' escapades orientatives fora d’Espanya dins del pressupost total.' : plan.overview || '';
-output.innerHTML='<h2>✨ '+safeText(plan.title||'Viatge personalitzat')+'</h2><p>'+safeText(overview)+'</p>'+(comparison||blocks+bullets(plan.logistics)+bullets(plan.budget_notes))+supplemental.map(card => card.html).join('')+'<h3>ℹ️ Abans de reservar</h3>'+bullets(plan.caveats)+'<p class="planhint"><b>Itineraris orientatius, sense preus ni disponibilitat en temps real.</b> Comprova dates, allotjaments, transport i activitats als enllaços abans de pagar.</p>';
+output.innerHTML='<h2>✨ '+safeText(plan.title||'Viatge personalitzat')+'</h2><p>'+safeText(overview)+'</p>'+(comparison||blocks+bullets(plan.logistics)+bullets(plan.budget_notes))+supplemental.map(card => card.html).join('')+'<h3>ℹ️ Abans de reservar</h3>'+bullets(plan.caveats)+'<p class="planhint">Els imports del planificador són estimats. Consulta les tarifes de cada proposta per comprovar preus i disponibilitat.</p>';
+output.querySelectorAll('[data-trip-quotes]').forEach((container, index) => {
+  attachTripQuotes(container, options[index], payload);
+});
 }catch{ if(payload.budget !== null && !payload.destination)return false; output.innerHTML='<p class="planhint">No hem pogut connectar amb el planificador. Torna-ho a provar.</p>'; }
 output.scrollIntoView({behavior:'smooth',block:'start'});return true;
 }
