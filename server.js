@@ -5,9 +5,9 @@ import {readFile} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
 import path from 'node:path';
 const app=express();
-installAmadeus(app);
 app.disable('x-powered-by');
 app.use(express.json({limit:'20kb'}));
+installAmadeus(app);
 const dir=path.dirname(fileURLToPath(import.meta.url));
 const origin=(process.env.PUBLIC_ORIGIN||'https://rogermarondo-cmd.github.io').replace(/\/$/,'');
 app.use((req,res,next)=>{
