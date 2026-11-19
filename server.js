@@ -334,6 +334,29 @@ Preus i rutes són estimacions. Evita inventar disponibilitat, horaris, números
       return [{ ...option, stages, total, remaining: budget === null ? null : budget - total, perPerson: total / travelers }];
     });
     plan.options = validOptions(plan.options);
+    // A failed first batch should not mean there are no destinations.
+    // Retry with a broader brief, still respecting the original budget.
+    if (budget !== null && plan.options.length === 0 && !controller.signal.aborted) {
+      const fallback = await Promise.allSettled([
+        requestPlan({
+          themes: themes.slice(0, 3).map((title, themeId) => ({ title, themeId })),
+          internationalIdeas: ['Europa', 'Mediterrani', 'Balcans', 'Nord d’Àfrica'],
+          outsideEurope: false,
+          preferLongHaul: false,
+          alternativeSearch: true
+        }),
+        requestPlan({
+          themes: themes.slice(3, 6).map((title, index) => ({ title, themeId: index + 3 })),
+          internationalIdeas: ['Europa central', 'Europa de l’Est', 'Mediterrani'],
+          outsideEurope: false,
+          preferLongHaul: false,
+          alternativeSearch: true
+        })
+      ]);
+      for (const result of fallback) {
+        if (result.status === 'fulfilled') plan.options.push(...validOptions(result.value.options));
+      }
+    }
     if (outsideEurope && !controller.signal.aborted) {
       const existingPlaces = [...new Set(plan.options.map(option => option.stages[0].place))];
       const distinctCount = new Set(existingPlaces.map(placeKey)).size;
