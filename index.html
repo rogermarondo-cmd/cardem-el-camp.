@@ -121,7 +121,7 @@ return '<article class="proposal"><h3>🌎 '+safeText(p[0])+' · '+safeText(p[1]
 }
 
 // El motor IA s'utilitza només si el servidor està configurat.
-// A GitHub Pages, sense servidor, es conserva el simulador i s'identifica clarament.
+// Si la IA no està disponible, fem servir el planificador orientatiu.
 async function requestAITrip(){
 const host=location.hostname.endsWith('github.io')?'':location.origin;
 if(!host)return false;
@@ -130,6 +130,7 @@ const payload={departure:get('plFrom').value.trim(),destination:get('plWhere').v
 const output=get('planOutput');output.innerHTML='<p class="planhint">🌍 La IA està preparant la proposta…</p>';
 try{
 const response=await fetch('/api/plan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+if(response.status>=500)return false;
 const data=await response.json();
 if(!response.ok){output.innerHTML='<p class="planhint">⚠️ '+safeText(data.error||'No es pot consultar la IA.')+'</p>';return true}
 const plan=data.plan||{};
@@ -139,7 +140,7 @@ return '<article class="proposal"><h3>📍 Etapa '+(i+1)+': '+safeText(place)+'<
 }).join('');
 const bullets=a=>Array.isArray(a)?'<ul>'+a.map(v=>'<li>'+safeText(v)+'</li>').join('')+'</ul>':'';
 output.innerHTML='<h2>✨ '+safeText(plan.title||'Viatge personalitzat')+'</h2><p>'+safeText(plan.overview||'')+'</p>'+blocks+'<h3>🚗 Logística</h3>'+bullets(plan.logistics)+'<h3>💶 Pressupost</h3>'+bullets(plan.budget_notes)+'<h3>ℹ️ Abans de reservar</h3>'+bullets(plan.caveats)+'<p class="planhint"><b>Itinerari creat amb IA, sense preus ni disponibilitat en temps real.</b> Comprova dates, allotjaments, transport i activitats als enllaços abans de pagar.</p>';
-}catch(e){output.innerHTML='<p class="planhint">⚠️ No s’ha pogut connectar amb el servidor IA. Torna-ho a provar.</p>'}
+}catch{ return false; }
 output.scrollIntoView({behavior:'smooth',block:'start'});return true;
 }
 document.getElementById('plannerForm').addEventListener('submit',async e=>{
