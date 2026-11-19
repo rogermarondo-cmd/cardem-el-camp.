@@ -17,7 +17,9 @@ app.use((req,res,next)=>{
   next();
 });
 app.get('/',async(req,res)=>res.type('html').send(await readFile(path.join(dir,'index.html'),'utf8')));
-app.get('/api/health',(req,res)=>res.json({ok:true,aiConfigured:!!process.env.OPENAI_API_KEY,providerPricingConnected:process.env.DUFFEL_LIVE_TOKEN?.startsWith('duffel_live_') ?? false}));
+app.get('/api/health',(req,res)=>res.json({ok:true,aiConfigured:!!process.env.OPENAI_API_KEY,stayPricingConfigured:!!bookingHeaders(),providerPricingConnected:process.env.DUFFEL_LIVE_TOKEN?.startsWith('duffel_live_') ?? false}));
+const validDate = date => /^\d{4}-\d{2}-\d{2}$/.test(date) &&
+    Number.isFinite(Date.parse(date)) && new Date(date).toISOString().slice(0, 10) === date;
 const flightSearchHits = new Map();
 app.post('/api/flights', async (req, res) => {
   res.setHeader('Cache-Control', 'no-store');
@@ -32,8 +34,6 @@ app.post('/api/flights', async (req, res) => {
   const inbound = String(input.inbound || '');
   const adults = Number(input.adults);
   const checkedBag = input.checkedBag === true;
-  const validDate = date => /^\d{4}-\d{2}-\d{2}$/.test(date) &&
-    Number.isFinite(Date.parse(date)) && new Date(date).toISOString().slice(0, 10) === date;
   if (!/^[A-Z]{3}$/.test(from) || !/^[A-Z]{3}$/.test(to) || from === to ||
       !validDate(outbound) || outbound < new Date().toISOString().slice(0, 10) ||
       (inbound && (!validDate(inbound) || inbound < outbound)) ||
@@ -98,12 +98,91 @@ app.post('/api/flights', async (req, res) => {
         checkedBagIncluded: includesCheckedBag(offer) === true,
         legs: (offer.slices || []).map(slice => (slice.segments || []).map(segment => ({
           from: segment.origin?.iata_code, to: segment.destination?.iata_code,
-          date: segment.departing_at?.slice(0, 10)
+          departure: segment.departing_at, arrival: segment.arriving_at
         })))
       }))
     });
   } catch {
     res.status(502).json({ error: 'Ara mateix no hem pogut consultar les tarifes de vols.' });
+  }
+});
+
+function bookingHeaders() {
+  const { BOOKING_API_TOKEN, BOOKING_AFFILIATE_ID } = process.env;
+  if (!BOOKING_API_TOKEN || !BOOKING_AFFILIATE_ID) return null;
+  return {
+    Authorization: 'Bearer ' + BOOKING_API_TOKEN,
+    'X-Affiliate-Id': BOOKING_AFFILIATE_ID,
+    'Content-Type': 'application/json'
+  };
+}
+
+async function bookingRequest(endpoint, headers, body) {
+  const response = await fetch('https://demandapi.booking.com/3.2/accommodations/' + endpoint, {
+    method: 'POST', headers, body: JSON.stringify(body), signal: AbortSignal.timeout(12000)
+  });
+  if (!response.ok) {
+    console.error('Booking.com accommodation HTTP status', endpoint, response.status);
+    throw Error('Accommodation provider unavailable');
+  }
+  const { data } = await response.json();
+  if (!Array.isArray(data)) throw Error('Invalid accommodation provider response');
+  return data;
+}
+
+let stayWindow = { expires: 0, count: 0 };
+app.post('/api/stays', async (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  const headers = bookingHeaders();
+  if (!headers) return res.status(503).json({ error: 'La connexió d’allotjaments està pendent d’activació.' });
+
+  const input = req.body || {};
+  const airport = String(input.airport || '').trim().toUpperCase();
+  const checkin = String(input.checkin || '');
+  const checkout = String(input.checkout || '');
+  const adults = Number(input.adults);
+  const rooms = Number(input.rooms);
+  if (!/^[A-Z]{3}$/.test(airport) || !validDate(checkin) || !validDate(checkout) ||
+      checkin < new Date().toISOString().slice(0, 10) || checkout <= checkin ||
+      !Number.isInteger(adults) || adults < 1 || adults > 12 ||
+      !Number.isInteger(rooms) || rooms < 1 || rooms > adults) {
+    return res.status(400).json({ error: 'Revisa el codi d’aeroport, les dates, els adults i les habitacions.' });
+  }
+
+  const now = Date.now();
+  if (stayWindow.expires <= now) stayWindow = { expires: now + 60000, count: 0 };
+  if (stayWindow.count >= 12) {
+    return res.status(429).json({ error: 'S’ha arribat al límit de consultes d’allotjament. Espera un minut.' });
+  }
+  stayWindow.count++;
+
+  try {
+    const results = await bookingRequest('search', headers, {
+      airport, checkin, checkout, currency: 'EUR', rows: 20,
+      booker: { country: 'es', platform: 'desktop' },
+      guests: { number_of_adults: adults, number_of_rooms: rooms }
+    });
+    const offers = results.flatMap(result => {
+      const amount = result.price?.display?.booker_currency;
+      if (!Number.isSafeInteger(result.id) || !Number.isFinite(amount) || amount <= 0 ||
+          result.currency?.booker !== 'EUR' || typeof result.url !== 'string') return [];
+      let url;
+      try { url = new URL(result.url); } catch { return []; }
+      if (url.protocol !== 'https:' || !['www.booking.com', 'booking.com'].includes(url.hostname)) return [];
+      return [{ id: result.id, amount, url: url.href }];
+    }).sort((a, b) => a.amount - b.amount);
+    const details = offers.length ? await bookingRequest('details', headers, {
+      accommodations: offers.map(offer => offer.id)
+    }) : [];
+    const names = new Map(details.map(detail => [
+      detail.id, Object.values(detail.name || {}).find(name => typeof name === 'string' && name.trim())
+    ]));
+    res.json({
+      provider: 'Booking.com', currency: 'EUR', searchedAt: new Date(now).toISOString(),
+      offers: offers.map(offer => ({ ...offer, name: names.get(offer.id) || 'Allotjament ' + offer.id }))
+    });
+  } catch {
+    res.status(502).json({ error: 'Ara mateix no hem pogut consultar les tarifes d’allotjaments.' });
   }
 });
 

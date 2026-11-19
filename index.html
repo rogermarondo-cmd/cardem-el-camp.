@@ -47,6 +47,20 @@
     <button class="go" type="submit">Consulta els vols</button>
   </form>
   <div id="flightResults" aria-live="polite"></div>
+</details>
+<details class="proposal">
+  <summary>Consulta tarifes d’hotels, apartaments i hostals</summary>
+  <form id="staySearch">
+    <div class="plannergrid">
+      <label>Codi d’aeroport de la zona<input name="airport" required maxlength="3" pattern="[A-Za-z]{3}" placeholder="Ex. FCO per Roma"></label>
+      <label>Entrada<input name="checkin" type="date" required></label>
+      <label>Sortida<input name="checkout" type="date" required></label>
+      <label>Adults<input name="adults" type="number" min="1" max="12" value="2" required></label>
+      <label>Habitacions<input name="rooms" type="number" min="1" max="12" value="1" required></label>
+    </div>
+    <button class="go" type="submit">Consulta allotjaments</button>
+  </form>
+  <div id="stayResults" aria-live="polite"></div>
 </details><p class="planhint" id="planDisclaimer">Simulació amb costos orientatius per a hotels econòmics, hostals i apartaments; NO preus reals. No podem assegurar hotels 7,5/10+ ni disponibilitat fins a consultar els proveïdors.</p></div></div><div id="surpriseModal" hidden role="dialog" aria-modal="true" aria-label="Viatge sorpresa" style="position:fixed;inset:0;z-index:50;background:#06142bcf;padding:20px;overflow:auto"><div style="max-width:480px;margin:10vh auto;background:white;border-radius:24px;padding:26px;color:#152743"><h2>🎁 Viatge sorpresa</h2><p>Tria el pressupost, les dates i el tipus de viatge. La destinació es revelarà poc abans de la sortida.</p><label>Pressupost màxim per persona (€)<input type="number" min="50" value="250" style="width:100%;padding:12px;border:1px solid #ccd;border-radius:10px"></label><p style="font-size:13px;color:#59687b">Pròximament: servei de reserves. Aquesta pantalla és una demostració i no cobra ni confirma viatges.</p><button id="closeSurprise" class="go" style="width:100%">Tancar</button></div></div></main><footer class="footer">© Cardem el Camp · Fes la maleta, que marxem! · Versió de prova</footer><script>
 const extra={ca:{navhome:'🏠 Inici',navtravel:'✈️ Viatges',navdeals:'🔥 Ofertes',navsurprise:'🎁 Sorpresa',navsnow:'❄️ Neu',cards:[['Viatges a la carta','Dissenya el teu viatge com tu vols!'],['Escapades de cap de setmana','2, 3 o 4 dies per desconnectar'],['Ofertes de viatges','Promocions, descomptes i última hora'],['Neu i aventura',"Forfets, esquís, snowboards, botes i cascs"],['Viatge sorpresa',"Descobreix la destinació a l’últim moment"],['Ponts i festius','Aprofita els dies de festa']]},es:{navhome:'🏠 Inicio',navtravel:'✈️ Viajes',navdeals:'🔥 Ofertas',navsurprise:'🎁 Sorpresa',navsnow:'❄️ Nieve',cards:[['Viajes a la carta','Diseña el viaje a tu gusto'],['Escapadas de fin de semana','2, 3 o 4 días para desconectar'],['Ofertas de viajes','Promociones, descuentos y última hora'],['Nieve y aventura','Forfaits, esquís, snowboards, botas y cascos'],['Viaje sorpresa','Descubre el destino en el último momento'],['Puentes y festivos','Aprovecha tus días libres']]},en:{navhome:'🏠 Home',navtravel:'✈️ Travel',navdeals:'🔥 Deals',navsurprise:'🎁 Surprise',navsnow:'❄️ Snow',cards:[['Tailor-made trips','Design your perfect journey'],['Weekend getaways','Escape for 2, 3 or 4 days'],['Travel deals','Promotions and last-minute deals'],['Snow adventures','Ski passes, skis, boards, boots and helmets'],['Mystery trip','Discover your destination at the last minute'],['Holidays and long weekends','Make the most of your time off']]}};const translations={ca:['🌴 ESCAPADES · VIATGES · AVENTURA','🧳 Fes la maleta, que marxem!','On marxem aquesta vegada?',"SORTIDA · QUALSEVOL PUNT D'EUROPA",'ON VOLS ANAR?','DATA','NITS','PERSONES','🔎 TROBA EL MILLOR PREU','Quina aventura et ve de gust?','Explora possibilitats i consulta ofertes als proveïdors.'],es:['🌴 ESCAPADAS · VIAJES · AVENTURA','🧳 ¡Haz la maleta, que nos vamos!','¿Adónde nos vamos esta vez?','SALIDA · CUALQUIER LUGAR DE EUROPA','¿A DÓNDE VAMOS?','FECHA','NOCHES','PERSONAS','🔎 ENCUENTRA EL MEJOR PRECIO','¿Qué aventura te apetece?','Explora posibilidades y consulta ofertas de proveedores.'],en:['🌴 GETAWAYS · TRAVEL · ADVENTURE','🧳 Pack your bags, let’s go!','Where to this time?','DEPARTURE · ANYWHERE IN EUROPE','DESTINATION','DATE','NIGHTS','TRAVELERS','🔎 FIND THE BEST PRICE','What adventure is calling?','Explore options and check offers with providers.']};lang.addEventListener('change',()=>{const ids=['eyebrow','tag','searchtitle','originlabel','destlabel','datelabel','nightslabel','peoplelabel','go','discoverTitle','discoverSub'];ids.forEach((id,i)=>document.getElementById(id).textContent=translations[lang.value][i]);document.documentElement.lang=lang.value;document.querySelectorAll('[data-i]').forEach(a=>a.textContent=extra[lang.value][a.dataset.i]);document.querySelectorAll('.card').forEach((c,i)=>{c.querySelector('strong').textContent=extra[lang.value].cards[i][0];c.querySelector('em').textContent=extra[lang.value].cards[i][1]+' →'})});const today=new Date();date.min=today.toISOString().slice(0,10);function search(){const d=destination.value.trim(),o=origin.value.trim();if(!d){destination.focus();return}const q=encodeURIComponent(d),from=encodeURIComponent(o),day=date.value;const urls=[['🏨 Booking','https://www.booking.com/searchresults.html?ss='+q+(day?'&checkin='+day:'')+'&group_adults='+people.value],['🏡 Airbnb','https://www.airbnb.com/s/'+q+'/homes'],['⭐ Google Hotels','https://www.google.com/travel/hotels?q='+q],['✈️ Vols','https://www.google.com/travel/flights?q='+encodeURIComponent('Flights from '+o+' to '+d)],['🚗 Cotxe','https://www.google.com/maps/dir/?api=1&origin='+from+'&destination='+q+'&travelmode=driving'],['🚆 Tren','https://www.google.com/search?q='+encodeURIComponent('train '+o+' to '+d)]];results.style.display='block';results.innerHTML='<strong>Compara opcions i comprova que l’allotjament tingui 7,5/10 o més:</strong><div>'+urls.map(([name,url])=>'<a href="'+url+'" target="_blank" rel="noopener noreferrer">'+name+' ↗</a>').join('')+'</div><small>Els enllaços obren proveïdors externs; no són preus verificats en temps real.</small>';results.scrollIntoView({behavior:'smooth',block:'nearest'})}go.onclick=search;document.querySelectorAll('.card').forEach(c=>c.onclick=()=>{if(c.dataset.action==='planner'){document.getElementById('planner').classList.add('open');return;}if(c.dataset.surprise){document.getElementById('surpriseModal').hidden=false;return;}destination.value=c.dataset.search;document.querySelector('.search').scrollIntoView({behavior:'smooth'});destination.focus()});document.getElementById('closeSurprise').onclick=()=>document.getElementById('surpriseModal').hidden=true;const planTranslations={ca:['Viatges a la carta',"Explica'ns quant vols gastar i et preparem una proposta.",'Sortida','Pressupost total del grup (€), opcional','Dies de viatge','Persones','Destinació (opcional)','Transport preferit','Vols llogar cotxe?','Tipus de viatge','Tancar','✨ Prepara el meu viatge'],es:['Viajes a la carta','Dinos cuánto quieres gastar y prepararemos una propuesta.','Salida','Presupuesto total del grupo (€), opcional','Días de viaje','Personas','Destino (opcional)','Transporte preferido','¿Alquilar coche?','Tipo de viaje','Cerrar','✨ Prepara mi viaje'],en:['Tailor-made trips','Tell us your budget and we will create a proposal.','Departure','Total group budget (€), optional','Travel days','Travelers','Destination (optional)','Preferred transport','Rental car?','Travel style','Close','✨ Plan my trip']};function translatePlanner(){const ids=['plannerTitle','plannerIntro','plOrigin','plBudget','plDays','plPeople','plDestination','plTransport','plRental','plStyle','closePlanner','planSubmit'];ids.forEach((id,i)=>{const el=document.getElementById(id);if(el.tagName==='LABEL'){el.firstChild.textContent=planTranslations[lang.value][i]}else el.textContent=planTranslations[lang.value][i]})}lang.addEventListener('change',translatePlanner);document.getElementById('closePlanner').onclick=()=>document.getElementById('planner').classList.remove('open');document.getElementById('planner').addEventListener('click',e=>{if(e.target.id==='planner')e.currentTarget.classList.remove('open')});const suggestions={beach:['Mallorca','Algarve','Costa Brava'],city:['València','Porto','Lió'],nature:['Pirineus','Andorra','Llacs italians'],snow:['Andorra','Alps francesos','Pirineus'],mix:['Porto','València','Mallorca']};
 const worldTrips=[
@@ -262,9 +276,9 @@ document.getElementById('flightSearch').addEventListener('submit', async event =
           const item = document.createElement('li');
           const amount = new Intl.NumberFormat(lang.value, { style: 'currency', currency: offer.currency }).format(offer.amount);
           const route = offer.legs.map(leg => leg.map(segment =>
-            [segment.date, segment.from, segment.to].filter(Boolean).join(' ')
+            [segment.from, segment.departure?.replace('T', ' '), '→', segment.to, segment.arrival?.replace('T', ' ')].filter(Boolean).join(' ')
           ).join(' / ')).join(' · ');
-          item.textContent = [amount + ' per al grup', offer.airline, route,
+          item.textContent = [amount + ' per al grup', offer.airline, route, 'Vàlid fins a ' + new Date(offer.expiresAt).toLocaleString(lang.value),
             offer.checkedBagIncluded ? 'Maleta facturada inclosa per adult' : 'Maleta facturada no confirmada'
           ].filter(Boolean).join(' · ');
           list.append(item);
@@ -285,6 +299,49 @@ document.getElementById('flightSearch').addEventListener('submit', async event =
     }
   } catch (error) {
     output.textContent = error instanceof SyntaxError ? 'La consulta de vols no està disponible en aquesta adreça.' : error.message;
+  } finally {
+    button.disabled = false;
+  }
+});
+
+document.getElementById('staySearch').addEventListener('submit', async event => {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const button = form.querySelector('button');
+  const output = document.getElementById('stayResults');
+  const input = Object.fromEntries(new FormData(form));
+  button.disabled = true;
+  output.textContent = 'Consultant el proveïdor d’allotjaments…';
+  try {
+    if (input.checkout <= input.checkin) throw Error('La sortida ha de ser posterior a l’entrada.');
+    if (Number(input.rooms) > Number(input.adults)) throw Error('Hi ha d’haver almenys un adult per habitació.');
+    const response = await fetch('/api/stays', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(input)
+    });
+    const data = await response.json();
+    if (!response.ok) throw Error(data.error);
+    if (!data.offers.length) {
+      output.textContent = 'El proveïdor no ha retornat cap tarifa per a aquestes dates i ocupació.';
+      return;
+    }
+    const note = document.createElement('p');
+    note.textContent = data.provider + ' · ' + new Date(data.searchedAt).toLocaleString(lang.value) +
+      ' · Preu per a tota l’estada i el grup. Confirma l’import i els possibles càrrecs al proveïdor.';
+    const list = document.createElement('ul');
+    const format = new Intl.NumberFormat(lang.value, { style: 'currency', currency: data.currency });
+    for (const offer of data.offers) {
+      const item = document.createElement('li');
+      const link = document.createElement('a');
+      link.href = offer.url;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.textContent = offer.name + ' · ' + format.format(offer.amount);
+      item.append(link);
+      list.append(item);
+    }
+    output.replaceChildren(note, list);
+  } catch (error) {
+    output.textContent = error instanceof SyntaxError ? 'La consulta d’allotjaments requereix la versió web de Render.' : error.message;
   } finally {
     button.disabled = false;
   }
@@ -701,7 +758,7 @@ function localizeNode(root, inline = false) {
   }
 }
 
-const updatedResults = ['results','planOutput','flightResults','cityGuideOutput'].map(id => document.getElementById(id));
+const updatedResults = ['results','planOutput','flightResults','stayResults','cityGuideOutput'].map(id => document.getElementById(id));
 const resultsObserver = new MutationObserver(records => {
   for (const root of new Set(records.map(record => updatedResults.find(container => container.contains(record.target))).filter(Boolean))) {
     localizeNode(root, true);
