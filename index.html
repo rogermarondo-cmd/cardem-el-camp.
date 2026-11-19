@@ -678,7 +678,7 @@ const response=await fetch('/api/plan',{method:'POST',headers:{'Content-Type':'a
 
 const data=await response.json();
 if(payload.language !== lang.value)return true;
-if(!response.ok && payload.budget !== null && !payload.destination)return false;
+if(!response.ok && payload.budget !== null && !payload.destination){ output.innerHTML='<p class="planhint">⚠️ '+safeText(data.error||'El planificador no està disponible. Prova les opcions orientatives.')+'</p>';return false; }
 if(!response.ok){output.innerHTML='<p class="planhint">⚠️ '+safeText(data.error||'No es pot consultar la IA.')+'</p>';return true}
 const plan=data.plan||{};
 if(payload.budget !== null && !payload.destination && !plan.options?.length)return false;
@@ -765,7 +765,7 @@ try {
 } finally {
   if(button)button.disabled=false;
 }
-if(!where && budget!==null && budget / people < 1000 && mode==='auto' && rent!=='yes' && plHotelQuality.value!=='premium'){
+if(!where && budget!==null && mode==='auto' && rent!=='yes' && plHotelQuality.value!=='premium'){
   const nearby=internationalTrips(amount,people,from,days,departure,[],document.getElementById("plExperience").value);
   if(nearby?.length){
     rememberTripPlaces(from, nearby.map(card => card.place));
@@ -777,9 +777,7 @@ if(!where && budget!==null && budget / people < 1000 && mode==='auto' && rent!==
   }
 }
 if(!where && budget!==null){
-  planOutput.textContent = budget / people >= 1000 ?
-    'El cercador no ha trobat cap viatge fora d’Europa amb aquestes condicions.' :
-    'El cercador no ha trobat cap escapada fora d’Espanya amb aquestes condicions.';
+  planOutput.textContent = 'No hi ha cap proposta validada amb aquest pressupost. Prova una destinació concreta o canvia les dates. Europa i la resta del món continuen disponibles.';
   return;
 }
 if(budget===null){planOutput.textContent='Obre el planificador a Cardem el Camp per comparar les tres categories.';return;}
