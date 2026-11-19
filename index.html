@@ -407,13 +407,14 @@ function internationalTrips(amount, people, from, days, date, excludedPlaces = [
   });
 }
 
-function attachTripQuotes(container, option, trip) {
+function attachTripQuotes(container, option, trip, automaticSearches) {
   if (option.kind === 'package' || option.kind === 'cruise') {
     container.textContent = 'Demana una cotització al proveïdor del paquet o del creuer.';
     return;
   }
   const details = document.createElement('details');
-  details.innerHTML = '<summary>Consulta tarifes de vols i allotjaments</summary>';
+  details.open = true;
+  details.innerHTML = '<summary>Tarifes de vols i allotjaments</summary>';
   const total = document.createElement('p');
   total.setAttribute('aria-live', 'polite');
   details.append(total);
@@ -463,7 +464,7 @@ function attachTripQuotes(container, option, trip) {
         input.min = 1;
         input.max = trip.travelers;
       }
-      input.value = defaults[name] ?? '';
+      input.value = kind === 'date' ? String(defaults[name] ?? '').slice(0, 10) : defaults[name] ?? '';
       wrapper.append(input);
       grid.append(wrapper);
     }
@@ -473,8 +474,12 @@ function attachTripQuotes(container, option, trip) {
     button.textContent = 'Consulta tarifes';
     const results = document.createElement('div');
     results.setAttribute('aria-live', 'polite');
-    form.append(heading, grid, baggage, button, results);
-    details.append(form);
+    const search = document.createElement('details');
+    search.innerHTML = '<summary>Modifica o repeteix la cerca</summary>';
+    form.append(grid, baggage, button);
+    search.append(form);
+    details.append(heading, results, search);
+    results.textContent = 'Completa la cerca per obtenir una tarifa.';
     form.addEventListener('input', event => {
       if (results.contains(event.target)) return;
       selected.delete(form);
@@ -548,10 +553,28 @@ function attachTripQuotes(container, option, trip) {
         }
       } catch (error) {
         results.textContent = error.message || 'No s’ha pogut consultar la tarifa.';
+        const link = document.createElement('a');
+        if (flight) {
+          const query = ['vols', input.from, input.to, input.outbound, input.inbound, input.adults + ' adults'].filter(Boolean).join(' ');
+          link.href = 'https://www.google.com/travel/flights?q=' + encodeURIComponent(query);
+          link.textContent = 'Compara els vols a Google Flights';
+        } else {
+          const params = new URLSearchParams({ ss: defaults.place || input.airport,
+            checkin: input.checkin, checkout: input.checkout, group_adults: input.adults, no_rooms: input.rooms });
+          link.href = 'https://www.booking.com/searchresults.html?' + params;
+          link.textContent = 'Consulta les habitacions a Booking.com';
+        }
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        results.append(' ', link);
       } finally {
         controls.forEach(control => { control.disabled = false; });
       }
     });
+    if (form.checkValidity() && automaticSearches[type] > 0) {
+      automaticSearches[type]--;
+      form.requestSubmit();
+    }
   }
   function addPending(label, search) {
     lines++;
@@ -601,8 +624,8 @@ function attachTripQuotes(container, option, trip) {
       addPending(stage.place + ' · ' + stage.transport, stage.transport + ' ' + stage.place);
     }
     if (Number(stage.nights) > 0) {
-      addSearch('Allotjament · ' + stage.place, 'stays', {
-        airport: stage.airport, checkin: stage.checkin, checkout: stage.checkout,
+      addSearch('Allotjament · ' + stage.place + ' · ' + stage.nights + ' nits', 'stays', {
+        place: stage.place, airport: stage.airport, checkin: stage.checkin, checkout: stage.checkout,
         rooms: Math.ceil(trip.travelers / 2)
       });
     }
@@ -715,8 +738,9 @@ const comparison = options.map(option => {
 const overview = supplemental.length ? (options.length + supplemental.length) +
   ' escapades orientatives fora d’Espanya dins del pressupost total.' : plan.overview || '';
 output.innerHTML='<h2>✨ '+safeText(plan.title||'Viatge personalitzat')+'</h2><p>'+safeText(overview)+'</p>'+(comparison||blocks+bullets(plan.logistics)+bullets(plan.budget_notes))+supplemental.map(card => card.html).join('')+'<h3>ℹ️ Abans de reservar</h3>'+bullets(plan.caveats)+'<p class="planhint">Els imports del planificador són estimats. Consulta les tarifes de cada proposta per comprovar preus i disponibilitat.</p>';
+const automaticSearches = { flights: 4, stays: 12 };
 output.querySelectorAll('[data-trip-quotes]').forEach((container, index) => {
-  attachTripQuotes(container, options[index], payload);
+  attachTripQuotes(container, options[index], payload, automaticSearches);
 });
 }catch{ if(payload.budget !== null && !payload.destination)return false; output.innerHTML='<p class="planhint">No hem pogut connectar amb el planificador. Torna-ho a provar.</p>'; }
 output.scrollIntoView({behavior:'smooth',block:'start'});return true;
