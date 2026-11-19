@@ -1,4 +1,4 @@
-// Combine independent provider quotes without ever substituting estimated prices.
+// Summarize provider-shaped quotes supplied by the client; these are not server-verified.
 export function summarizeQuotes({ flights, stays, travelers, budget }) {
   const count = Number(travelers);
   if (!Number.isInteger(count) || count < 1 || count > 12) throw Error('Invalid traveler count');
@@ -21,6 +21,6 @@ export function summarizeQuotes({ flights, stays, travelers, budget }) {
     perPersonKnown: Math.round(knownTotal / count * 100) / 100,
     remainingBeforeLocalCosts: max === null ? null : Math.round((max - knownTotal) * 100) / 100,
     missing: [...(flightVerified ? [] : ['flight']), ...(stayVerified ? [] : ['stay']), 'local_transport', 'meals', 'activities'],
-    disclaimer: 'Només inclou tarifes verificades de vols i allotjaments disponibles. No és un pressupost complet ni una reserva.'
+    disclaimer: 'Subtotal orientatiu basat en dades enviades pel navegador, no verificades pel servidor. Cal tornar a consultar el proveïdor abans de reservar. No inclou tots els costos.'
   };
 }
