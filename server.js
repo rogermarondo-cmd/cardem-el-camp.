@@ -16,7 +16,96 @@ app.use((req,res,next)=>{
   next();
 });
 app.get('/',async(req,res)=>res.type('html').send(await readFile(path.join(dir,'index.html'),'utf8')));
-app.get('/api/health',(req,res)=>res.json({ok:true,aiConfigured:!!process.env.OPENAI_API_KEY,providerPricingConnected:false}));
+app.get('/api/health',(req,res)=>res.json({ok:true,aiConfigured:!!process.env.OPENAI_API_KEY,providerPricingConnected:process.env.DUFFEL_LIVE_TOKEN?.startsWith('duffel_live_') ?? false}));
+const flightSearchHits = new Map();
+app.post('/api/flights', async (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  const token = process.env.DUFFEL_LIVE_TOKEN;
+  if (!token?.startsWith('duffel_live_')) {
+    return res.status(503).json({ error: 'La connexió de vols en directe està pendent d’activació.' });
+  }
+  const input = req.body || {};
+  const from = String(input.from || '').trim().toUpperCase();
+  const to = String(input.to || '').trim().toUpperCase();
+  const outbound = String(input.outbound || '');
+  const inbound = String(input.inbound || '');
+  const adults = Number(input.adults);
+  const checkedBag = input.checkedBag === true;
+  const validDate = date => /^\d{4}-\d{2}-\d{2}$/.test(date) &&
+    Number.isFinite(Date.parse(date)) && new Date(date).toISOString().slice(0, 10) === date;
+  if (!/^[A-Z]{3}$/.test(from) || !/^[A-Z]{3}$/.test(to) || from === to ||
+      !validDate(outbound) || outbound < new Date().toISOString().slice(0, 10) ||
+      (inbound && (!validDate(inbound) || inbound < outbound)) ||
+      !Number.isInteger(adults) || adults < 1 || adults > 9) {
+    return res.status(400).json({ error: 'Revisa els codis d’aeroport, les dates i el nombre d’adults.' });
+  }
+  const now = Date.now();
+  for (const [ip, window] of flightSearchHits) {
+    if (window.expires <= now) flightSearchHits.delete(ip);
+  }
+  const ip = req.ip || 'unknown';
+  const window = flightSearchHits.get(ip) || { expires: now + 60000, count: 0 };
+  if (window.count >= 4 || (!flightSearchHits.has(ip) && flightSearchHits.size >= 500)) {
+    return res.status(429).json({ error: 'Has arribat al límit de consultes de vols. Espera un minut.' });
+  }
+  window.count++;
+  flightSearchHits.set(ip, window);
+  const slices = [{ origin: from, destination: to, departure_date: outbound }];
+  if (inbound) slices.push({ origin: to, destination: from, departure_date: inbound });
+  try {
+    const response = await fetch('https://api.duffel.com/air/offer_requests?return_offers=true', {
+      method: 'POST',
+      signal: AbortSignal.timeout(25000),
+      headers: {
+        Authorization: 'Bearer ' + token, 'Duffel-Version': 'v2',
+        Accept: 'application/json', 'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ data: {
+        slices, passengers: Array.from({ length: adults }, () => ({ type: 'adult' })), cabin_class: 'economy'
+      } })
+    });
+    if (!response.ok) {
+      console.error('Duffel search HTTP status', response.status);
+      if (response.status === 422) {
+        return res.status(400).json({ error: 'El proveïdor no accepta aquesta combinació d’aeroports o dates.' });
+      }
+      throw Error('Flight provider unavailable');
+    }
+    const { data } = await response.json();
+    if (data?.live_mode !== true || !Array.isArray(data.offers)) throw Error('Invalid live flight response');
+    const includesCheckedBag = offer =>
+      offer.slices?.length === slices.length && offer.slices.every(slice =>
+        slice.segments?.length && slice.segments.every(segment =>
+          segment.passengers?.length === adults && segment.passengers.every(passenger =>
+            passenger.baggages?.some(bag => bag.type === 'checked' && bag.quantity >= 1)
+          )
+        )
+      );
+    const offers = data.offers.filter(offer =>
+      (!checkedBag || includesCheckedBag(offer)) &&
+      typeof offer.total_amount === 'string' && Number(offer.total_amount) > 0 &&
+      Number.isFinite(Number(offer.total_amount)) && /^[A-Z]{3}$/.test(offer.total_currency) &&
+      Date.parse(offer.expires_at) > Date.now()
+    );
+    const currencies = new Set(offers.map(offer => offer.total_currency));
+    if (currencies.size === 1) offers.sort((a, b) => Number(a.total_amount) - Number(b.total_amount));
+    res.json({
+      provider: 'Duffel', searchedAt: new Date().toISOString(),
+      offers: offers.slice(0, 5).map(offer => ({
+        amount: offer.total_amount, currency: offer.total_currency,
+        airline: offer.owner?.name || '', expiresAt: offer.expires_at,
+        checkedBagIncluded: includesCheckedBag(offer) === true,
+        legs: (offer.slices || []).map(slice => (slice.segments || []).map(segment => ({
+          from: segment.origin?.iata_code, to: segment.destination?.iata_code,
+          date: segment.departing_at?.slice(0, 10)
+        })))
+      }))
+    });
+  } catch {
+    res.status(502).json({ error: 'Ara mateix no hem pogut consultar les tarifes de vols.' });
+  }
+});
+
 const hits=new Map();
 app.post('/api/plan',async(req,res)=>{
   const now=Date.now(),ip=req.ip||'unknown',recent=(hits.get(ip)||[]).filter(t=>now-t<3600000);
