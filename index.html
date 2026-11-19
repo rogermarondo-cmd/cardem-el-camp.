@@ -275,33 +275,40 @@ document.getElementById('flightSearch').addEventListener('submit', async event =
   }
 });
 
-const tripThemes = ['A peu', 'Esports d’aventura', 'Visites', 'Cultura', 'Gastronomia', 'Neu o natura'];
+const tripThemes = ['A peu', 'Esports d’aventura', 'Cultura', 'Gastronomia', 'Diversió', 'Cultura i diversió'];
+let previousTripSearch;
 
-function nearbyTrips(amount, people, from, days, date) {
-  if (!/^barcelona(?:,|$)/i.test(from)) return null;
-  // Planning allowances per traveller, in round-trip transport, nights, meals and activities order.
+function nearbyTrips(amount, people, from, days, date, excludedPlaces = []) {
+  if (!/^barcelona(?:,|$)/i.test(from)) return [];
+  // Round-trip transport, accommodation, food and activities per traveller.
   const candidates = [
-    [0, 'Camí de Sant Jaume des de Sarria', 7, [180, 174, 175, 0], 'Arribada a Sarria. Etapes a Portomarín, Palas de Rei, Arzúa, O Pedrouzo i Santiago. Tornada des de Santiago. Preveu una etapa llarga entre Palas de Rei i Arzúa.'],
-    [0, 'Collserola', 1, [12, 0, 10, 0], 'Anada i tornada amb FGC. Caminada des del Baixador de Vallvidrera pels camins de la serra i pícnic.'],
-    [1, 'Castelldefels', 1, [12, 0, 12, 25], 'Tren i sessió d’iniciació al caiac amb lloguer de material, subjecta a condicions i obertura.'],
-    [2, 'Sitges', 1, [12, 0, 12, 0], 'Tren d’anada i tornada, passeig pel nucli antic, La Punta i el passeig marítim.'],
-    [3, 'Tarragona', 1, [22, 0, 12, 12], 'Tren d’anada i tornada. Passeig per la Part Alta i visita al conjunt romà segons horaris.'],
-    [4, 'Sant Sadurní d’Anoia', 1, [15, 0, 18, 15], 'Tren d’anada i tornada, productes locals i visita amb tast a un celler segons horaris.'],
-    [5, 'El Prat i el delta del Llobregat', 1, [12, 0, 12, 0], 'Transport públic i passeig pels espais naturals oberts del delta amb observació d’aus.']
+    [0, 'Ribes de Freser', 3, [55, 140, 90, 25], 'Tren i dues nits. Ruta pels voltants de Ribes i excursió a la Vall de Núria segons condicions.'],
+    [1, 'Sort', 3, [80, 130, 90, 145], 'Autobús i dues nits. Ràfting guiat a la Noguera Pallaresa amb material i una segona activitat guiada segons temporada i tarifa.'],
+    [2, 'Toulouse', 3, [110, 150, 95, 30], 'Autobús i dues nits. Capitole, patrimoni del centre i una visita a un museu.'],
+    [3, 'Logronyo', 3, [100, 140, 125, 65], 'Transport d’anada i tornada, dues nits, ruta de pintxos pel carrer Laurel i visita amb tast a un celler.'],
+    [4, 'Salou', 2, [45, 95, 60, 100], 'Tren, una nit i jornada al parc temàtic si està obert en les dates del viatge.'],
+    [5, 'València', 3, [100, 160, 95, 85], 'Tren i dues nits. Llotja de la Seda, centre històric i una activitat de lleure a la Ciutat de les Arts i les Ciències.'],
+    [0, 'Collserola', 1, [12, 0, 10, 0], 'Anada i tornada amb FGC. Caminada des del Baixador de Vallvidrera i pícnic.'],
+    [1, 'Castelldefels', 1, [12, 0, 12, 25], 'Tren i iniciació al caiac amb lloguer de material segons condicions i obertura.'],
+    [2, 'Tarragona', 1, [22, 0, 12, 12], 'Tren d’anada i tornada. Part Alta i visita al conjunt romà segons horaris.'],
+    [3, 'Sant Sadurní d’Anoia', 1, [15, 0, 18, 15], 'Tren, productes locals i visita amb tast a un celler segons horaris.'],
+    [4, 'Badalona', 1, [10, 0, 15, 14], 'Metro, passeig marítim i una sessió de cinema o un espectacle segons cartellera.'],
+    [5, 'Sitges', 1, [12, 0, 14, 16], 'Tren, visita al nucli antic o als museus i tarda de lleure al passeig marítim.']
   ];
+  const excluded = new Set(excludedPlaces.map(place => normalizePlace(place.split(',')[0])));
   const used = new Set();
   return candidates.flatMap(([theme, place, duration, costs, itinerary]) => {
     const groupCosts = costs.map(cost => cost * people);
     const total = groupCosts.reduce((sum, cost) => sum + cost, 0);
-    if (used.has(theme) || (days !== null && days !== duration) || total > amount) return [];
+    if (excluded.has(normalizePlace(place)) || used.has(theme) || (days !== null && days !== duration) || total > amount) return [];
     used.add(theme);
     const query = encodeURIComponent(from + ' ' + place + ' ' + date + ' transport activitats');
-    return [{ theme, html: '<article class="proposal"><h3>' + tripThemes[theme] + ' · ' + place + '</h3><p>' +
+    return [{ theme, place, html: '<article class="proposal"><h3>' + tripThemes[theme] + ' · ' + place + '</h3><p>' +
       duration + ' dies · ' + itinerary + '</p><p><b>Total orientatiu del grup ' + total +
       ' €</b> · Transport ' + groupCosts[0] + ' € · Allotjament ' + groupCosts[1] +
       ' € · Menjar ' + groupCosts[2] + ' € · Activitats ' + groupCosts[3] +
       ' €</p><a href="https://www.google.com/search?q=' + query +
-      '" target="_blank" rel="noopener noreferrer">Consulta preus i disponibilitat</a>' + cityGuide(theme === 0 && duration === 7 ? 'Santiago de Compostel·la' : place, 'Espanya') + '</article>' }];
+      '" target="_blank" rel="noopener noreferrer">Consulta preus i disponibilitat</a>' + cityGuide(place, place === 'Toulouse' ? 'França' : 'Espanya') + '</article>' }];
   });
 }
 
@@ -310,6 +317,10 @@ const host=location.hostname.endsWith('github.io')?'':location.origin;
 if(!host)return false;
 const get=id=>document.getElementById(id);
 const payload={departure:get('plFrom').value.trim(),destination:get('plWhere').value.trim(),budget:get('plMoney').value ? Number(get('plMoney').value) : null,travelers:Number(get('plTravelers').value),days:get('plDuration').value?Number(get('plDuration').value):null,date:get('plDepart').value,flex:get('plFlex').value,pace:get('plPace').value,interest:get('plInterest').value,quality:get('plHotelQuality').value,transport:get('plMode').value,rental:get('plCar').value,style:get('plStyleValue').value};
+const searchKey = JSON.stringify({ ...payload, budget: null });
+if (!payload.destination && previousTripSearch?.key === searchKey && previousTripSearch.budget !== payload.budget) {
+  payload.previousDestinations = previousTripSearch.places;
+}
 const output=get('planOutput');output.innerHTML='<p class="planhint">🌍 La IA està preparant la proposta…</p>';
 try{
 const response=await fetch('/api/plan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
@@ -331,10 +342,14 @@ const expenseLabels = {
 };
 const euros = new Intl.NumberFormat('ca-ES', {style:'currency', currency:'EUR', maximumFractionDigits:2});
 const options = plan.options || [];
+const aiPlaces = options.map(option => option.stages?.[0]?.place).filter(Boolean);
 const supplemental = payload.budget !== null && !payload.destination &&
   payload.transport === 'auto' && payload.rental !== 'yes' && payload.quality !== 'premium' ?
-  (nearbyTrips(payload.budget, payload.travelers, payload.departure, payload.days, payload.date) || [])
+  (nearbyTrips(payload.budget, payload.travelers, payload.departure, payload.days, payload.date, aiPlaces))
     .filter(card => !options.some(option => option.themeId === card.theme)) : [];
+if (!payload.destination) {
+  previousTripSearch = { key: searchKey, budget: payload.budget, places: [...aiPlaces, ...supplemental.map(card => card.place)] };
+}
 const comparison = options.map(option => {
   const stages = (option.stages || []).map(stage => {
     const visits = Array.isArray(stage.visits) ? stage.visits.join(', ') : '';
