@@ -226,7 +226,7 @@ app.post('/api/plan',async(req,res)=>{
     x.previousDestinations.filter(place => typeof place === 'string').slice(0, 24).map(place => place.slice(0, 100)) : [];
   prompt.experience = typeof x.experience === 'string' ? x.experience.trim().slice(0, 180) : '';
   const budgetPerTraveler = budget === null ? 0 : budget / travelers;
-  const outsideEurope = !destination && budgetPerTraveler >= 1000;
+  const outsideEurope = false; // Long-haul is a preference, never an exclusion of European destinations.
   const preferLongHaul = budgetPerTraveler >= 1000;
   const europe = new Set('AD AL AM AT AZ BA BE BG BY CH CY CZ DE DK EE ES FI FO FR GB GE GG GI GR HR HU IE IM IS IT JE KZ LI LT LU LV MC MD ME MK MT NL NO PL PT RO RS RU SE SI SJ SK SM TR UA VA XK'.split(' '));
   const europeAndNearby = new Set(('AD AL AM AT AZ BA BE BG BY CH CY CZ DE DK DZ EE EG ES FI FR GB GE GI GR HR HU IE IL IS IT JO KZ LB LI LT LU LV LY MA MC MD ME MK MT NL NO PL PS PT RO RS RU SE SI SK SM SY TN TR UA VA XK').split(' '));
@@ -407,7 +407,7 @@ Preus i rutes són estimacions. Evita inventar disponibilitat, horaris, números
     }
     if (budget === null && !plan.options.length) throw Error('No valid route for tier comparison');
     if (!plan.options.length && budget !== null) {
-      plan.overview = destination ? 'Cap ruta encaixa amb aquestes condicions.' : 'Cap escapada fora d’Espanya encaixa amb aquestes condicions i pressupost.';
+      plan.overview = destination ? 'Cap ruta encaixa amb aquestes condicions.' : 'No hem pogut validar cap proposta dins del pressupost. Prova una data flexible o una destinació concreta.';
     }
     res.json({plan,livePrices:false,bookingEnabled:false});
   }catch(e){console.error('Plan generation failed',e.message);res.status(502).json({error:'No hem pogut generar el viatge ara mateix. Torna-ho a provar.'})}
