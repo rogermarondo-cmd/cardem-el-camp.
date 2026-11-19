@@ -1,4 +1,5 @@
 import { installAmadeus } from './amadeus.js';
+import { summarizeQuotes } from './pricing.js';
 import { randomInt } from 'node:crypto';
 import express from 'express';
 import {readFile} from 'node:fs/promises';
@@ -185,6 +186,18 @@ app.post('/api/stays', async (req, res) => {
     });
   } catch {
     res.status(502).json({ error: 'Ara mateix no hem pogut consultar les tarifes d’allotjaments.' });
+  }
+});
+
+// Pricing is a subtotal of independently verified offers, not an invented full trip cost.
+app.post('/api/price-summary', (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  try {
+    const { flights, stays, travelers, budget } = req.body || {};
+    if (JSON.stringify(req.body || {}).length > 16000) return res.status(413).json({ error: 'Sol·licitud massa gran.' });
+    return res.json(summarizeQuotes({ flights, stays, travelers, budget }));
+  } catch {
+    return res.status(400).json({ error: 'Dades de tarifes o pressupost incorrectes.' });
   }
 });
 
